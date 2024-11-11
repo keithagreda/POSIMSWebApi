@@ -1,0 +1,6 @@
+@POSIMSWebApi_HostAddress = http://localhost:5147
+
+GET {{POSIMSWebApi_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
