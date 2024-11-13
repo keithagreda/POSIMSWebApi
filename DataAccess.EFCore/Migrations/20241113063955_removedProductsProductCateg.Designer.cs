@@ -4,6 +4,7 @@ using DataAccess.EFCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.EFCore.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20241113063955_removedProductsProductCateg")]
+    partial class removedProductsProductCateg
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -152,7 +155,12 @@ namespace DataAccess.EFCore.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("ProductId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
 
                     b.ToTable("ProductCategories");
                 });
@@ -436,19 +444,11 @@ namespace DataAccess.EFCore.Migrations
                     b.ToTable("StocksReceivings");
                 });
 
-            modelBuilder.Entity("ProductProductCategory", b =>
+            modelBuilder.Entity("Domain.Entities.ProductCategory", b =>
                 {
-                    b.Property<int>("ProductCategoriesId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ProductsId")
-                        .HasColumnType("int");
-
-                    b.HasKey("ProductCategoriesId", "ProductsId");
-
-                    b.HasIndex("ProductsId");
-
-                    b.ToTable("ProductProductCategory");
+                    b.HasOne("Domain.Entities.Product", null)
+                        .WithMany("ProductCategories")
+                        .HasForeignKey("ProductId");
                 });
 
             modelBuilder.Entity("Domain.Entities.SalesDetail", b =>
@@ -519,19 +519,9 @@ namespace DataAccess.EFCore.Migrations
                     b.Navigation("ProductFK");
                 });
 
-            modelBuilder.Entity("ProductProductCategory", b =>
+            modelBuilder.Entity("Domain.Entities.Product", b =>
                 {
-                    b.HasOne("Domain.Entities.ProductCategory", null)
-                        .WithMany()
-                        .HasForeignKey("ProductCategoriesId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Entities.Product", null)
-                        .WithMany()
-                        .HasForeignKey("ProductsId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                    b.Navigation("ProductCategories");
                 });
 
             modelBuilder.Entity("Domain.Entities.SalesHeader", b =>

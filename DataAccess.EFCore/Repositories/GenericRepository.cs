@@ -27,6 +27,26 @@ namespace DataAccess.EFCore.Repositories
             _context.Set<T>().AddRange(entities);
         }
 
+        public async Task<T> FirstOrDefaultAsync(int Id)
+        {
+            return await _context.Set<T>().FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == Id);
+        }
+
+        public async Task<T> FirstOrDefaultAsync(Guid id)
+        {
+            return await _context.Set<T>().FirstOrDefaultAsync(e => EF.Property<Guid>(e, "Id") == id);
+        }
+
+        public T FirstOrDefault(int id)
+        {
+            return _context.Set<T>().FirstOrDefault(e => EF.Property<int>(e, "Id") == id);
+        }
+
+        public T FirstOrDefault(Guid id)
+        {
+            return _context.Set<T>().FirstOrDefault(e => EF.Property<Guid>(e, "Id") == id);
+        }
+
         public IEnumerable<T> Find(Expression<Func<T, bool>> expression)
         {
             return _context.Set<T>().Where(expression);
@@ -35,6 +55,11 @@ namespace DataAccess.EFCore.Repositories
         public IEnumerable<T> GetAll()
         {
             return _context.Set<T>().ToList();
+        }
+
+        public async Task<IList<T>> GetAllAsync()
+        {
+            return await _context.Set<T>().ToListAsync();
         }
 
         public IQueryable<T> GetQueryable()

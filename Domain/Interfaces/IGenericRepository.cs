@@ -11,10 +11,16 @@ namespace Domain.Interfaces
     {
         T GetById(int id);
         T GetByGuid(Guid id);
+        Task<IList<T>> GetAllAsync();
         IQueryable<T> GetQueryable();
         Task<T> GetByGuidAsync(Guid id);
         IEnumerable<T> GetAll();
         IEnumerable<T> Find(Expression<Func<T, bool>> expression);
+        Task<T> FirstOrDefaultAsync(int id);
+        Task<T> FirstOrDefaultAsync(Guid id);
+
+        T FirstOrDefault(int id);
+        T FirstOrDefault(Guid id);
 
         void Add(T entity);
         void AddRange(IEnumerable<T> entities);

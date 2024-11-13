@@ -23,17 +23,38 @@ namespace POSIMSWebApi.Controllers
             _context = context;
             _unitOfWork = unitOfWork;
         }
-        [HttpPost]
-        public ActionResult AddProductCateogry()
+        [HttpGet("GetProductCategory")]
+        public async Task<ActionResult> GetProductCategory()
         {
-            var productCategory = new ProductCategory
+            var data = await _unitOfWork.ProductCategory.GetAllAsync();
+            if(data.Count <= 0)
             {
-                Name = "Ice",
-                CreationTime = DateTime.Now,
-            };
-            _unitOfWork.ProductCategory.Add(productCategory);
-            _unitOfWork.Complete();
-            return Ok();
+                throw new ArgumentNullException("No Products Found", nameof(data));
+            }
+            return Ok(data);
+        }
+        [HttpPost]
+        public ActionResult AddProductCategory()
+        {
+            try
+            {
+                var productCategory = new ProductCategory
+                {
+                    Name = "Ice",
+                    CreationTime = DateTimeOffset.Now,
+                    CreatedBy = 1,
+                    ModifiedBy = 0,
+                    DeletedBy = 0,
+                };
+                _unitOfWork.ProductCategory.Add(productCategory);
+                _unitOfWork.Complete();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+
+                throw new Exception(ex.Message);
+            }
         }
        
     }

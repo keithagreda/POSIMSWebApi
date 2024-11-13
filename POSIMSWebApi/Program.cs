@@ -3,6 +3,7 @@ using DataAccess.EFCore.UnitOfWorks;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using POSIMSWebApi;
+using POSIMSWebApi.Interceptors;
 using Serilog;
 using System;
 
@@ -22,6 +23,7 @@ builder.Services.AddDbContext<ApplicationContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 builder.Services.AddDbContext<SerilogContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("SqlLite")));
 builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<SoftDeleteInterceptor>();
 
 var app = builder.Build();
 
@@ -31,6 +33,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+
 
 app.UseHttpsRedirection();
 
