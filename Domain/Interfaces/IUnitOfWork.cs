@@ -8,6 +8,7 @@ namespace Domain.Interfaces
 {
     public interface IUnitOfWork : IDisposable
     {
+        ISalesHeaderRepository SalesHeader { get; }
         ISalesDetailRepository SalesDetail {  get; }
         IProductCategoryRepository ProductCategory { get; }
         IProductRepository Product { get; }

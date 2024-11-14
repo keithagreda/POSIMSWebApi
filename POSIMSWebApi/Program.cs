@@ -4,6 +4,8 @@ using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using POSIMSWebApi;
 using POSIMSWebApi.Interceptors;
+using POSIMSWebApi.Application.Services;
+using POSIMSWebApi.Application.Interfaces;
 using Serilog;
 using System;
 
@@ -23,7 +25,9 @@ builder.Services.AddDbContext<ApplicationContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 builder.Services.AddDbContext<SerilogContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("SqlLite")));
 builder.Services.AddTransient<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<SoftDeleteInterceptor>();
+builder.Services.AddScoped<AuditInterceptor>();
 
 var app = builder.Build();
 

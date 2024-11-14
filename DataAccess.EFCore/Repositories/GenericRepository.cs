@@ -37,6 +37,11 @@ namespace DataAccess.EFCore.Repositories
             return await _context.Set<T>().FirstOrDefaultAsync(e => EF.Property<Guid>(e, "Id") == id);
         }
 
+        public async Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _context.Set<T>().FirstOrDefaultAsync(predicate);
+        }
+
         public T FirstOrDefault(int id)
         {
             return _context.Set<T>().FirstOrDefault(e => EF.Property<int>(e, "Id") == id);

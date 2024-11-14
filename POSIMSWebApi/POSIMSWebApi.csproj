@@ -22,10 +22,7 @@
   <ItemGroup>
     <ProjectReference Include="..\DataAccess.EFCore\DataAccess.EFCore.csproj" />
     <ProjectReference Include="..\Domain\Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Services\" />
+    <ProjectReference Include="..\POSIMSWebApi.Application\POSIMSWebApi.Application.csproj" />
   </ItemGroup>
 
 </Project>

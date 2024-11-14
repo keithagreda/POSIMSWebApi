@@ -18,6 +18,7 @@ namespace Domain.Interfaces
         IEnumerable<T> Find(Expression<Func<T, bool>> expression);
         Task<T> FirstOrDefaultAsync(int id);
         Task<T> FirstOrDefaultAsync(Guid id);
+        Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate);
 
         T FirstOrDefault(int id);
         T FirstOrDefault(Guid id);

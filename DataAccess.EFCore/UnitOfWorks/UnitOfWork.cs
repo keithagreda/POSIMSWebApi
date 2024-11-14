@@ -1,4 +1,5 @@
 ﻿using DataAccess.EFCore.Repositories;
+using Domain.Entities;
 using Domain.Interfaces;
 using System;
 using System.Collections.Generic;
@@ -14,10 +15,12 @@ namespace DataAccess.EFCore.UnitOfWorks
         public UnitOfWork(ApplicationContext context)
         {
             _context = context;
+            SalesHeader = new SalesHeaderRepository(_context);
             SalesDetail = new SalesDetailRepository(_context);
             ProductCategory = new ProductCategoryRepository(_context);
             Product = new ProductRepository(_context);
         }
+        public ISalesHeaderRepository SalesHeader { get; private set; }
         public ISalesDetailRepository SalesDetail { get; private set; }
         public IProductCategoryRepository ProductCategory { get; private set; }
         public IProductRepository Product { get; private set; }

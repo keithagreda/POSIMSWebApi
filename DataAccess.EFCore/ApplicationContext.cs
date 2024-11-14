@@ -13,12 +13,15 @@ namespace DataAccess.EFCore
     public class ApplicationContext : DbContext
     {
         private readonly SoftDeleteInterceptor _softDeleteInterceptor;
-        public ApplicationContext(DbContextOptions<ApplicationContext> options, SoftDeleteInterceptor softDeleteInterceptor) : base(options)
+        private readonly AuditInterceptor _auditInterceptor;
+        public ApplicationContext(DbContextOptions<ApplicationContext> options, SoftDeleteInterceptor softDeleteInterceptor, AuditInterceptor auditInterceptor) : base(options)
         {
             _softDeleteInterceptor = softDeleteInterceptor;
+            _auditInterceptor = auditInterceptor;
         }
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
+            optionsBuilder.AddInterceptors(_auditInterceptor);
             optionsBuilder.AddInterceptors(_softDeleteInterceptor);
         }
         public DbSet<SalesHeader> SalesHeaders { get; set; }

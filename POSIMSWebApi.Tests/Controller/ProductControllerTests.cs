@@ -3,6 +3,7 @@ using Domain.Interfaces;
 using FakeItEasy;
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
+using POSIMSWebApi.Application.Interfaces;
 using POSIMSWebApi.Controllers;
 using System;
 using System.Collections.Generic;
@@ -16,10 +17,12 @@ namespace POSIMSWebApi.Tests.Controller
     {
         private readonly IProductRepository _productRepository;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly IProductService _productService;
         public ProductControllerTests()
         {
             _productRepository = A.Fake<IProductRepository>();
             _unitOfWork = A.Fake<IUnitOfWork>();
+            _productService = A.Fake<IProductService>();
         }
 
         [Fact]
@@ -28,10 +31,9 @@ namespace POSIMSWebApi.Tests.Controller
             //Arrange
             var products = A.Fake<ICollection<Product>>();
             var productList = A.Fake<List<Product>>();
-            var controller = new ProductController(_unitOfWork);
+            var controller = new ProductController(_unitOfWork, _productService);
             //Act
             var result = await controller.GetProducts();
-
             //Assert
             result.Should().NotBeNull();
             result.Should().BeOfType<OkObjectResult>();
