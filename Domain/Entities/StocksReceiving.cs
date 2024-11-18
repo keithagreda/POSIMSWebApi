@@ -7,8 +7,8 @@ namespace Domain.Entities
         public Guid Id { get; set; }
         public decimal Quantity { get; set; }
         public string TransNum { get; set; }
-        public int StocksId { get; set; }
-        [ForeignKey("StocksId")]
-        public Stocks StockFk { get; set; }
+        public int StocksHeaderId { get; set; }
+        [ForeignKey("StocksHeaderId")]
+        public StocksHeader StocksHeaderFk { get; set; }
     }
 }

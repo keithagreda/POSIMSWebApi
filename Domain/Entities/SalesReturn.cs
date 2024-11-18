@@ -8,8 +8,8 @@ namespace Domain.Entities
         public Guid SalesHeaderId { get; set; }
         [ForeignKey("SalesHeaderId")]
         public SalesHeader SalesHeaderFk { get; set; }
-        public int StocksId { get; set; }
-        [ForeignKey("StocksId")]
-        public Stocks StockFk { get; set; }
+        public int StockDetailId { get; set; }
+        [ForeignKey("StockDetailId")]
+        public StocksDetail StockDetailFk { get; set; }
     }
 }

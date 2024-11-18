@@ -26,7 +26,9 @@ namespace Domain.Interfaces
         T FirstOrDefault(Guid id);
 
         void Add(T entity);
+        Task<int> InsertAndGetIdAsync(T entity);
         void AddRange(IEnumerable<T> entities);
+
         Task<string> AddRangeAsync(IEnumerable<T> entities);
         void Remove(T entity);
         void RemoveRange(IEnumerable<T> entities);

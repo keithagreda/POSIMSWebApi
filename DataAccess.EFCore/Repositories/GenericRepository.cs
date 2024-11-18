@@ -27,6 +27,21 @@ namespace DataAccess.EFCore.Repositories
             _context.Set<T>().AddRange(entities);
         }
 
+        public async Task<int> InsertAndGetIdAsync(T entity)
+        {
+            var entityEntry = _context.Set<T>().Add(entity);
+
+            await _context.SaveChangesAsync();
+
+            var idProperty = typeof(T).GetProperty("Id");
+            if (idProperty == null)
+            {
+                throw new InvalidOperationException($"The entity type {typeof(T).Name} does not have a property named 'Id'.");
+            }
+
+            return (int)idProperty.GetValue(entity);
+        }
+
         public async Task<string> AddRangeAsync(IEnumerable<T> entities)
         {
             try
