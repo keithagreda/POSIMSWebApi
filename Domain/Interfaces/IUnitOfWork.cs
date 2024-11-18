@@ -12,6 +12,8 @@ namespace Domain.Interfaces
         ISalesDetailRepository SalesDetail {  get; }
         IProductCategoryRepository ProductCategory { get; }
         IProductRepository Product { get; }
+        IStocksRepository Stocks { get; }
+        IStocksReceivingRepository StocksReceiving { get; }
         int Complete();
     }
 }

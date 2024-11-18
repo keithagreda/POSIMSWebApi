@@ -30,7 +30,11 @@ namespace POSIMSWebApi.Application.Services
         {
             //data
             //validation
-            if(await ValidateProductName(input.Name))
+            var query = _unitOfWork.Product.GetQueryable();
+
+            var isExist = await query.AnyAsync(e => e.Name == input.Name);
+
+            if (isExist)
             {
                 //if(input.ProductCategoryId != 0)
                 //{
@@ -56,16 +60,24 @@ namespace POSIMSWebApi.Application.Services
                 return "Invalid action! Product name already exists!";
             }
             //getCateg
+            var generatedProdCode = GenerateProdCode(input.Name);
+
+            var getExistingCode = await query.Where(e => e.ProdCode == generatedProdCode).ToListAsync();
+
+            var prodCode = $"{generatedProdCode}{getExistingCode.Count + 1}";
+
+
             ProductCategory? categ = null;
             if(input.ProductCategoryId != 0)
             {
                 categ = await _unitOfWork.ProductCategory.FirstOrDefaultAsync(e => e.Id == input.ProductCategoryId);
-                if (categ is null) return "Product Creation failed inputted Category doesn't exist!";
+                if (categ is null) return "Product Creation failed input Category doesn't exist!";
             }
             var newProduct = new Product
             {
                 Name = input.Name,
                 Price = input.Price,
+                ProdCode = prodCode,
                 ProductCategories = new List<ProductCategory>() { categ }
             };
 
@@ -75,13 +87,22 @@ namespace POSIMSWebApi.Application.Services
             return $"Successfully added {input.Name} in the products list!";
         }
 
-        private async Task<bool> ValidateProductName(string productName)
+        //private async Task<bool> ValidateProductName(string productName)
+        //{
+        //    var isExist = await _unitOfWork.Product.FirstOrDefaultAsync(e => e.Name == productName);
+        //    if(isExist is not null) return true;
+        //    return false;
+        //}
+
+        private string GenerateProdCode(string productName)
         {
-            var isExist = await _unitOfWork.Product.FirstOrDefaultAsync(e => e.Name == productName);
-            if(isExist is not null) return true;
-            return false;
+            if (string.IsNullOrWhiteSpace(productName))
+                return string.Empty;
+
+            return string.Concat(productName
+                .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+                .Select(word => char.ToUpper(word[0])));
         }
-        //TO DO MAKE ADD PRODUCT CATEGORY INSTEAD OF PUTTING ON CREATE
 
     }
 }

@@ -8,7 +8,7 @@ namespace Domain.Entities
 {
     public class AuditedEntity
     {
-        public DateTimeOffset? CreationTime { get; set; }
+        public DateTimeOffset CreationTime { get; set; }
         public int CreatedBy { get; set; }
         public DateTimeOffset? ModifiedTime { get; set; }
         public int? ModifiedBy { get; set; }

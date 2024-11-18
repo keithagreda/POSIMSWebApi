@@ -16,6 +16,8 @@ namespace Domain.Interfaces
         Task<T> GetByGuidAsync(Guid id);
         IEnumerable<T> GetAll();
         IEnumerable<T> Find(Expression<Func<T, bool>> expression);
+        Task<IQueryable<T>> FindAsyncQueryable(Expression<Func<T, bool>> expression);
+
         Task<T> FirstOrDefaultAsync(int id);
         Task<T> FirstOrDefaultAsync(Guid id);
         Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate);
@@ -25,6 +27,7 @@ namespace Domain.Interfaces
 
         void Add(T entity);
         void AddRange(IEnumerable<T> entities);
+        Task<string> AddRangeAsync(IEnumerable<T> entities);
         void Remove(T entity);
         void RemoveRange(IEnumerable<T> entities);
     }

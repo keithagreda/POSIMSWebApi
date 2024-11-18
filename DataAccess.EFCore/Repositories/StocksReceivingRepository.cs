@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using Domain.Interfaces;
 
 namespace DataAccess.EFCore.Repositories
 {
@@ -7,6 +8,5 @@ namespace DataAccess.EFCore.Repositories
         public StocksReceivingRepository(ApplicationContext context) : base(context)
         {
         }
-
     }
 }

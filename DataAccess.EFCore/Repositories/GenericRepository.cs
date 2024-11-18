@@ -27,6 +27,19 @@ namespace DataAccess.EFCore.Repositories
             _context.Set<T>().AddRange(entities);
         }
 
+        public async Task<string> AddRangeAsync(IEnumerable<T> entities)
+        {
+            try
+            {
+                await _context.Set<T>().AddRangeAsync(entities);
+                return "Success!";
+            }
+            catch (Exception ex)
+            {
+
+                return ex.Message;
+            }
+        }
         public async Task<T> FirstOrDefaultAsync(int Id)
         {
             return await _context.Set<T>().FirstOrDefaultAsync(e => EF.Property<int>(e, "Id") == Id);
@@ -53,6 +66,11 @@ namespace DataAccess.EFCore.Repositories
         }
 
         public IEnumerable<T> Find(Expression<Func<T, bool>> expression)
+        {
+            return _context.Set<T>().Where(expression);
+        }
+
+        public async Task<IQueryable<T>> FindAsyncQueryable(Expression<Func<T, bool>> expression)
         {
             return _context.Set<T>().Where(expression);
         }

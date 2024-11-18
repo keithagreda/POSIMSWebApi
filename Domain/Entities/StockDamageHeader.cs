@@ -6,9 +6,7 @@ namespace Domain.Entities
     {
         public Guid Id { get; set; }
         public string Remarks { get; set; }
-        public Guid StocksId { get; set; }
-        [ForeignKey("StocksId")]
-        public Stocks StocksFk { get; set; }
+        public int Quantity { get; set; }
         public ICollection<StockDamageDetail> StockDamageDetails { get; set; }
     }
 }
