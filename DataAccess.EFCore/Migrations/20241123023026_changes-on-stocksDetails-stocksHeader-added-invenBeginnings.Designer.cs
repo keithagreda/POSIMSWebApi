@@ -4,6 +4,7 @@ using DataAccess.EFCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace DataAccess.EFCore.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20241123023026_changes-on-stocksDetails-stocksHeader-added-invenBeginnings")]
+    partial class changesonstocksDetailsstocksHeaderaddedinvenBeginnings
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -111,54 +114,6 @@ namespace DataAccess.EFCore.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("InventoryBeginnings");
-                });
-
-            modelBuilder.Entity("Domain.Entities.InventoryBeginningDetails", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("CreatedBy")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset>("CreationTime")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<int?>("DeletedBy")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset?>("DeletionTime")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<Guid>("InventoryBeginningId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsModified")
-                        .HasColumnType("bit");
-
-                    b.Property<int?>("ModifiedBy")
-                        .HasColumnType("int");
-
-                    b.Property<DateTimeOffset?>("ModifiedTime")
-                        .HasColumnType("datetimeoffset");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Qty")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("InventoryBeginningId");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("InventoryBeginningDetails");
                 });
 
             modelBuilder.Entity("Domain.Entities.Product", b =>
@@ -645,25 +600,6 @@ namespace DataAccess.EFCore.Migrations
                     b.HasIndex("ProductsId");
 
                     b.ToTable("ProductProductCategory");
-                });
-
-            modelBuilder.Entity("Domain.Entities.InventoryBeginningDetails", b =>
-                {
-                    b.HasOne("Domain.Entities.InventoryBeginning", "InventoryBeginningFk")
-                        .WithMany()
-                        .HasForeignKey("InventoryBeginningId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Domain.Entities.Product", "ProductFK")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("InventoryBeginningFk");
-
-                    b.Navigation("ProductFK");
                 });
 
             modelBuilder.Entity("Domain.Entities.SalesDetail", b =>

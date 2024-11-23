@@ -8,5 +8,7 @@ namespace DataAccess.EFCore.Repositories
         public StocksReceivingRepository(ApplicationContext context) : base(context)
         {
         }
+
+        
     }
 }

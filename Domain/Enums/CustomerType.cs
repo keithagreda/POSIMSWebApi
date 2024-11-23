@@ -12,4 +12,10 @@ namespace Domain.Enums
         Distributor = 1,
         Supplier = 2
     }
+
+    public enum InventoryStatus
+    {
+        Open = 0,
+        Closed = 1
+    }
 }

@@ -62,7 +62,7 @@ namespace POSIMSWebApi.Application.Services
             //getCateg
             var generatedProdCode = GenerateProdCode(input.Name);
 
-            var getExistingCode = await query.Where(e => e.ProdCode == generatedProdCode).ToListAsync();
+            var getExistingCode = await query.Where(e => e.ProdCode.Contains(generatedProdCode)).ToListAsync();
 
             var prodCode = $"{generatedProdCode}{getExistingCode.Count + 1}";
 
@@ -77,6 +77,7 @@ namespace POSIMSWebApi.Application.Services
             {
                 Name = input.Name,
                 Price = input.Price,
+                DaysTillExpiration = input.DaysTillExpiration,
                 ProdCode = prodCode,
                 ProductCategories = new List<ProductCategory>() { categ }
             };

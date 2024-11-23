@@ -9,6 +9,7 @@ namespace POSIMSWebApi.Application.Dtos.ProductDtos
     public class CreateProductDto
     {
         public string Name { get; set; }
+        public int DaysTillExpiration { get; set; }
         public int  Price { get; set; }
         public int ProductCategoryId { get; set; }
     }

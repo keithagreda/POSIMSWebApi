@@ -15,6 +15,8 @@ namespace Domain.Interfaces
         IStocksDetailRepository StocksDetail { get; }
         IStocksHeaderRepository StocksHeader { get; }
         IStocksReceivingRepository StocksReceiving { get; }
+        IInventoryBeginningRepository InventoryBeginning { get; }
+        IInventoryBeginningDetailsRepository InventoryBeginningDetails { get; }
         int Complete();
     }
 }

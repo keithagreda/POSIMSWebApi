@@ -33,6 +33,10 @@ namespace DataAccess.EFCore
         public DbSet<StockDamageDetail> StockDamageDetails { get; set; }
         public DbSet<SalesReturn> SalesReturns { get; set; }
         public DbSet<Customer> Customers { get; set; }
+        public DbSet<StocksHeader> StocksHeaders { get; set; }
+        public DbSet<StocksDetail> StocksDetails { get; set; }
+        public DbSet<InventoryBeginning> InventoryBeginnings { get; set; }
+        public DbSet<InventoryBeginningDetails> InventoryBeginningDetails { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
