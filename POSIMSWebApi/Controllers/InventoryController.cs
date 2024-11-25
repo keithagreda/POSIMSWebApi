@@ -1,6 +1,7 @@
 ﻿using Domain.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using POSIMSWebApi.Application.Dtos.Inventory;
 using POSIMSWebApi.Application.Interfaces;
 
 namespace POSIMSWebApi.Controllers
@@ -29,6 +30,15 @@ namespace POSIMSWebApi.Controllers
 
                 return BadRequest(ex.Message);
             }
+        }
+        [HttpPost("BeginningEntry")]
+        public async Task<IActionResult> BeginningEntry(CreateBeginningEntryDto input)
+        {
+            var data = await _inventoryService.BeginningEntry(input);
+
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            return Ok(data);
         }
     }
 }

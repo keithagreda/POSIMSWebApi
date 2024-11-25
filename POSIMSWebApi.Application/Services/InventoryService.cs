@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces;
+﻿using Domain.Entities;
+using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using POSIMSWebApi.Application.Dtos.Inventory;
 using POSIMSWebApi.Application.Interfaces;
@@ -17,7 +18,7 @@ namespace POSIMSWebApi.Application.Services
         {
 
             // Current Inventory
-            var getCurrentInventory = _unitOfWork.InventoryBeginningDetails
+            var getCurrentInventory = await _unitOfWork.InventoryBeginningDetails
                 .GetQueryable()
                 .Include(e => e.InventoryBeginningFk)
                 .Include(e => e.ProductFK)
@@ -26,16 +27,19 @@ namespace POSIMSWebApi.Application.Services
                 {
                     e.ProductFK.Id,
                     e.ProductFK.Name,
-                    e.ProductFK.CreationTime
                 })
                 .Select(g => new
                 {
                     ProductId = g.Key.Id,
                     ProductName = g.Key.Name,
-                    CreationTime = g.Key.CreationTime,
+                    CreationTime = g.Select(e => e.CreationTime),
                     TotalQuantity = g.Sum(e => e.Qty)
-                });
+                }).ToListAsync();
 
+            if(getCurrentInventory.Count <= 0)
+            {
+                throw new ArgumentNullException("Invalid Action! There is no beginning inventory", nameof(getCurrentInventory));
+            }
 
             // Received Stocks
             var receivedStocks = _unitOfWork.StocksReceiving.GetQueryable()
@@ -73,6 +77,34 @@ namespace POSIMSWebApi.Application.Services
             var result = join.FirstOrDefault();
             if (result is null) throw new ArgumentNullException("Error! Current Stocks can't be generated", nameof(result));
             return result!;
+        }
+
+        /// <summary>
+        /// This function can only be used when beginning entry is null
+        /// </summary>
+        /// <returns></returns>
+        public async Task<string> BeginningEntry(CreateBeginningEntryDto input)
+        {
+            var getCurrentOpenedInventory = _unitOfWork.InventoryBeginning.GetQueryable().Where(e => e.Status == Domain.Enums.InventoryStatus.Open);
+            var gcoId = await getCurrentOpenedInventory.Select(e => e.Id).FirstOrDefaultAsync();
+
+            var product = await _unitOfWork.Product.GetQueryable().Where(e => e.Name == input.ProductName).Select(e => e.Id).FirstOrDefaultAsync();
+
+            if(product == 0)
+            {
+                throw new ArgumentNullException("Error! Product Not Found.", nameof(product));
+            }
+            var newInventoryDetail = new InventoryBeginningDetails()
+            {
+                Id = Guid.NewGuid(),
+                InventoryBeginningId = gcoId,
+                ProductId = product,
+                Qty = input.ReceivedQty
+            };
+
+            await _unitOfWork.InventoryBeginningDetails.AddAsync(newInventoryDetail);
+            _unitOfWork.Complete();
+            return "Success!";
         }
     }
 }
