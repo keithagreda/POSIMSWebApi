@@ -10,17 +10,14 @@ namespace Domain.Entities
     public class SalesDetail : AuditedEntity
     {
         public Guid Id { get; set; }
-        public decimal TotalAmount { get; set; }
         public decimal Quantity { get; set; }
+        public decimal ActualSellingPrice { get; set; }
+        public decimal TotalAmount { get; set; }
         public decimal Discount { get; set; }
-        public int ProductId { get; set; }
-        [ForeignKey("ProductId")]
-        public Product ProductFk { get; set; }
+        public string TransNum { get; set; }
         public Guid SalesHeaderId { get; set; }
         [ForeignKey("SalesHeaderId")]
         public SalesHeader SalesHeaderFk { get; set; }
-        public Guid CustomerId { get; set; }
-        [ForeignKey("CustomerId")]
-        public Customer CustomerFk { get; set; }
+        
     }
 }
