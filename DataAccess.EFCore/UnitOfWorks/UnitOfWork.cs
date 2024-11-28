@@ -24,6 +24,7 @@ namespace DataAccess.EFCore.UnitOfWorks
             StocksHeader= new StocksHeaderRepository(_context);
             InventoryBeginning = new InventoryBeginningRepository(_context);
             InventoryBeginningDetails = new InventoryBeginningDetailsRepository(_context);
+            Customer = new CustomerRepository(_context);
         }
         public ISalesHeaderRepository SalesHeader { get; private set; }
         public ISalesDetailRepository SalesDetail { get; private set; }
@@ -34,6 +35,7 @@ namespace DataAccess.EFCore.UnitOfWorks
         public IStocksHeaderRepository StocksHeader { get; private set; }
         public IInventoryBeginningRepository InventoryBeginning { get; private set; }
         public IInventoryBeginningDetailsRepository InventoryBeginningDetails { get; private set; }
+        public ICustomerRepository Customer { get; private set; }
         public int Complete()
         {
             return _context.SaveChanges();
