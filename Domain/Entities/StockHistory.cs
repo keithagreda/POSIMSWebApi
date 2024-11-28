@@ -2,12 +2,10 @@
 
 namespace Domain.Entities
 {
-    public class SalesStockDetail : AuditedEntity
+    public class StockHistory : AuditedEntity
     {
         public Guid Id { get; set; }
-        public Guid SalesDetailId { get; set; }
-        [ForeignKey("SalesDetailId")]
-        public SalesDetail SalesDetailFk { get; set; }
+        public string TransNum { get; set; }
         public Guid StockDetailId { get; set; }
         [ForeignKey("StockDetailId")]
         public StocksDetail StockDetailFk { get; set; }

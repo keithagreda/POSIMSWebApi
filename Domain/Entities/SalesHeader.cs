@@ -6,6 +6,7 @@ namespace Domain.Entities
     {
         public Guid Id { get; set; }
         public decimal TotalAmount { get; set; }
+        public string TransNum { get; set; }
         public Guid CustomerId { get; set; }
         [ForeignKey("CustomerId")]
         public Customer CustomerFk { get; set; }

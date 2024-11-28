@@ -11,4 +11,5 @@ namespace Domain.Entities
         [ForeignKey("StocksHeaderId")]
         public StocksHeader StocksHeaderFk { get; set; }
     }
+
 }
