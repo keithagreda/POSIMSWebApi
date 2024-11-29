@@ -1,10 +1,14 @@
 ﻿using Domain.Entities;
+using Domain.Error;
 using Domain.Interfaces;
+using LanguageExt.Common;
 using Microsoft.EntityFrameworkCore;
+using POSIMSWebApi.Application.Dtos.Sales;
 using POSIMSWebApi.Application.Dtos.Stocks;
 using POSIMSWebApi.Application.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,7 +31,7 @@ namespace POSIMSWebApi.Application.Services
         /// <param name="input"></param>
         /// <returns>string</returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public async Task<int> AutoCreateStocks(CreateStocks input, string transNum)
+        public async Task<Result<int>> AutoCreateStocks(CreateStocks input, string transNum)
         {
             var productQ = await _unitOfWork.Product.FindAsyncQueryable(e => e.Id == input.ProductId);
             var stock = _unitOfWork.StocksDetail.GetQueryable().Include(e => e.StocksHeaderFk)
@@ -48,22 +52,27 @@ namespace POSIMSWebApi.Application.Services
             }
 
             var prod = await productQ.Select(e => new { e.ProdCode, e.DaysTillExpiration }).FirstOrDefaultAsync();
-            if (prod is null) throw new ArgumentNullException("Error! Product not found.", nameof(prod));
+            if (prod is null)
+            {
+                var error = new ValidationException("Error! Product not found., Param: ProductId.");
+                return new Result<int>(error);
+            }
             var daysTillExp = dateToday.AddDays(prod.DaysTillExpiration);
             var stocksCreated = await ListOfStocksToBeSaved(input, stockNum, transNum, daysTillExp);
             await _unitOfWork.StocksDetail.AddRangeAsync(stocksCreated.StockDetails);
-            return stocksCreated.HeaderId;
+            return new Result<int>(stocksCreated.HeaderId);
         }
 
         private async Task<ReturnListOfStocksToBeSaved> ListOfStocksToBeSaved(CreateStocks input, int prevStockNum, string transNum, DateTimeOffset daysTillExp)
         {
-            var stocksDetails = new List<StocksDetail>();
+                  var stocksDetails = new List<StocksDetail>();
             var qty = input.Quantity;
             //CREATE HEADER FOR STOCKS
             var header = new StocksHeader
             {
                 ProductId = input.ProductId,
                 ExpirationDate = daysTillExp,
+                StorageLocationId = input.StorageLocationId
             };
             var headerId = await _unitOfWork.StocksHeader.InsertAndGetIdAsync(header);
             var pStockNum = prevStockNum;
@@ -86,6 +95,47 @@ namespace POSIMSWebApi.Application.Services
             };
 
             return result;
+        }
+
+        /// <summary>
+        /// To handle how stock is deducted from stock details when a sale has happened
+        /// </summary>
+        /// <returns></returns>
+        public async Task<Result<string>> StockDetailSalesHandler(CreateSalesDetailDto input)
+        {
+            //var stock = await _unitOfWork.StocksHeader.GetQueryable().Include(e => e.StocksDetails)
+            //    .Where(e=> e.ProductId == input.ProductId && e.StorageLocationId == input.StorageLocationId)
+
+            var stock = _unitOfWork.StocksDetail.GetQueryable().Include(e => e.StocksHeaderFk)
+                .Where(e => e.Unavailable == false && e.StocksHeaderFk.ProductId == input.ProductId
+                && e.StocksHeaderFk.StorageLocationId == input.StorageLocationId)
+                .OrderBy(e => e.StocksHeaderFk.ExpirationDate).Take((int)input.Quantity);
+
+            
+
+            var stockDetailToBeSold = await stock.ToArrayAsync();
+            var errorList = new List<string>();
+            var stockDetailToBeSoldCount = stockDetailToBeSold.Count();
+            if (stockDetailToBeSoldCount >= 0)
+            {
+                errorList.Add("Error! there are no existing stocks.");
+            }
+            if(stockDetailToBeSoldCount < input.Quantity)
+            {
+                errorList.Add("There are no existing stocks for this item.");
+            }
+            if(errorList.Count <= 0)
+            {
+                var combinedError = string.Join("; ", errorList);
+                return new Result<string>(new Exception(combinedError));
+            }
+            foreach (var item in stockDetailToBeSold)
+            {
+                item.Unavailable = true;
+                await _unitOfWork.StocksDetail.UpdateAsync(item);
+            }
+            _unitOfWork.Complete();
+            return new Result<string>("Success!");
         }
     }
 }

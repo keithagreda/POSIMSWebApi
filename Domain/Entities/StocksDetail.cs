@@ -10,6 +10,7 @@ namespace Domain.Entities
         public int StocksHeaderId { get; set; }
         [ForeignKey("StocksHeaderId")]
         public StocksHeader StocksHeaderFk { get; set; }
+        public bool Unavailable { get; set; }
     }
 
 }

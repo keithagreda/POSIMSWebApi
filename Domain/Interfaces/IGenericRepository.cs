@@ -14,6 +14,7 @@ namespace Domain.Interfaces
         Task<IList<T>> GetAllAsync();
         IQueryable<T> GetQueryable();
         Task<T> GetByGuidAsync(Guid id);
+        Task UpdateAsync(T entity);
         IEnumerable<T> GetAll();
         IEnumerable<T> Find(Expression<Func<T, bool>> expression);
         Task<IQueryable<T>> FindAsyncQueryable(Expression<Func<T, bool>> expression);
@@ -21,10 +22,8 @@ namespace Domain.Interfaces
         Task<T> FirstOrDefaultAsync(int id);
         Task<T> FirstOrDefaultAsync(Guid id);
         Task<T> FirstOrDefaultAsync(Expression<Func<T, bool>> predicate);
-
         T FirstOrDefault(int id);
         T FirstOrDefault(Guid id);
-
         void Add(T entity);
         Task AddAsync(T entity);
         Task<int> InsertAndGetIdAsync(T entity);

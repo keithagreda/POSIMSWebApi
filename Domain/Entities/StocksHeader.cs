@@ -9,10 +9,9 @@ namespace Domain.Entities
         public int ProductId { get; set; }
         [ForeignKey("ProductId")]
         public Product ProductFK { get; set; }
-
-        public int StorageLocationId { get; set; }
+        public int? StorageLocationId { get; set; }
         [ForeignKey("StorageLocationId")]
-        public StorageLocation StorageLocationFk { get; set; }
+        public StorageLocation? StorageLocationFk { get; set; }
         public ICollection<StocksDetail> StocksDetails { get; set; } = new List<StocksDetail>();
     }
 }

@@ -11,5 +11,6 @@ namespace POSIMSWebApi.Application.Dtos.Stocks
     {
         public decimal Quantity { get; set; }
         public int ProductId { get; set; }
+        public int StorageLocationId { get; set; }
     }
 }

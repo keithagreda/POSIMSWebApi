@@ -8,6 +8,8 @@ using POSIMSWebApi.Application.Services;
 using POSIMSWebApi.Application.Interfaces;
 using Serilog;
 using System;
+using POSIMSWebApi.Middleware;
+using POSIMSWebApi.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,8 +31,12 @@ builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IStockDetailService, StocksDetailService>();
 builder.Services.AddScoped<IStockReceivingService, StocksReceivingService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<IStorageLocationService, StorageLocationService>();
+builder.Services.AddScoped<ISalesService, SalesService>();
 builder.Services.AddScoped<SoftDeleteInterceptor>();
 builder.Services.AddScoped<AuditInterceptor>();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
@@ -46,6 +52,9 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseExceptionHandler();
 
 app.MapControllers();
 

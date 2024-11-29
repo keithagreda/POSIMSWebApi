@@ -3,6 +3,7 @@ using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using POSIMSWebApi.Application.Dtos.ProductDtos;
 using POSIMSWebApi.Application.Dtos.Sales;
+using POSIMSWebApi.Application.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace POSIMSWebApi.Application.Services
 {
-    public class SalesService
+    public class SalesService : ISalesService
     {
         private readonly IUnitOfWork _unitOfWork;
         public SalesService(IUnitOfWork unitOfWork)
@@ -21,7 +22,7 @@ namespace POSIMSWebApi.Application.Services
 
         public async Task CreateSales(CreateOrEditSalesDto input)
         {
-            if(input.SalesHeaderId is null)
+            if (input.SalesHeaderId is null)
             {
                 //return for now still haven't decided how to handle errors
                 //planning to make result pattern
@@ -37,13 +38,13 @@ namespace POSIMSWebApi.Application.Services
                 Price = e.Price
             }).ToListAsync();
 
-            if(product.Count <= 0)
+            if (product.Count <= 0)
             {
                 return;
             }
 
             var customer = await _unitOfWork.Customer.FirstOrDefaultAsync(e => e.Id == input.CustomerId);
-            if(customer == null)
+            if (customer == null)
             {
                 return;
             }
@@ -58,7 +59,7 @@ namespace POSIMSWebApi.Application.Services
             };
 
             var salesDetails = new List<SalesDetail>();
-            foreach(var sDetail in input.CreateSalesDetailDtos)
+            foreach (var sDetail in input.CreateSalesDetailDtos)
             {
                 var currProduct = product.FirstOrDefault(e => e.Id == sDetail.ProductId);
                 var currAmount = CalculateAmount(product, sDetail.ProductId, sDetail.Quantity);
@@ -75,7 +76,7 @@ namespace POSIMSWebApi.Application.Services
                 };
                 salesDetails.Add(saleDetail);
             }
-            
+
         }
 
         private async Task<string> GenerateTransNum()
@@ -92,7 +93,7 @@ namespace POSIMSWebApi.Application.Services
         private decimal CalculateAmount(List<CreateProductSales> product, int productId, decimal quantity)
         {
             var productPrice = product.FirstOrDefault(e => e.Id == productId).Price;
-            if(productPrice == 0)
+            if (productPrice == 0)
             {
                 throw new ArgumentNullException("Error! Product Price not found", nameof(productPrice));
             }

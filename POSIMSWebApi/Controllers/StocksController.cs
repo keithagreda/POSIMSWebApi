@@ -22,19 +22,14 @@ namespace POSIMSWebApi.Controllers
 
         public async Task<IActionResult> ReceiveStocks(CreateStocksReceivingDto input)
         {
-            try
-            {
-                var result = await _stockReceivingService.ReceiveStocks(input);
-                _unitOfWork.Complete();
-                if (!ModelState.IsValid)
-                    return BadRequest(ModelState);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var result = await _stockReceivingService.ReceiveStocks(input);
+            _unitOfWork.Complete();
 
-                throw new Exception(ex.Message);
-            }
+            return result.Match<IActionResult>(
+           success => CreatedAtAction(nameof(ReceiveStocks), new { id = input.ProductId, input.Quantity, input.StorageLocationId }, success),
+           error => BadRequest(error));
         }
     }
 }

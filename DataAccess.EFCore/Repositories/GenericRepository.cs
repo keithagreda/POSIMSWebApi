@@ -27,6 +27,17 @@ namespace DataAccess.EFCore.Repositories
             await _context.Set<T>().AddAsync(entity);
         }
 
+        public async Task UpdateAsync(T entity)
+        {
+            if(_context.Entry(entity).State == EntityState.Detached)
+            {
+                _context.Set<T>().Attach(entity);
+            }
+
+            _context.Entry(entity).State = EntityState.Modified;
+            await _context.SaveChangesAsync();
+        }
+
         public void AddRange(IEnumerable<T> entities)
         {
             _context.Set<T>().AddRange(entities);

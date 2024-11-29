@@ -24,5 +24,6 @@ namespace POSIMSWebApi.Application.Dtos.Sales
         public decimal ProductPrice { get; set; }
         public decimal Amount { get; set; }
         public decimal Discount { get; set; }
+        public int? StorageLocationId { get; set; }
     }
 }

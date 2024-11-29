@@ -1,9 +1,10 @@
-﻿using POSIMSWebApi.Application.Dtos.StocksReceiving;
+﻿using LanguageExt.Common;
+using POSIMSWebApi.Application.Dtos.StocksReceiving;
 
 namespace POSIMSWebApi.Application.Interfaces
 {
     public interface IStockReceivingService
     {
-        Task<string> ReceiveStocks(CreateStocksReceivingDto input);
+        Task<Result<string>> ReceiveStocks(CreateStocksReceivingDto input);
     }
 }

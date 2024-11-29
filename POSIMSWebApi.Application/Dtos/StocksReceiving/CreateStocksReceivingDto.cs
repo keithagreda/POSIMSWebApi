@@ -15,6 +15,8 @@ namespace POSIMSWebApi.Application.Dtos.StocksReceiving
         public decimal Quantity { get; set; }
         [Required]
         public int ProductId { get; set; }
+        [Required]
+        public int StorageLocationId { get; set; }
     }
 
     public class GetAllStocksReceivingDto
