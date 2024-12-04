@@ -28,7 +28,7 @@ namespace POSIMSWebApi.Controllers
             _unitOfWork.Complete();
 
             return result.Match<IActionResult>(
-           success => CreatedAtAction(nameof(CreateSales), new { id = input.ProductId }, success),
+           success => CreatedAtAction(nameof(CreateSales), new { id = input.CreateSalesDetailDtos }, success),
            error => BadRequest(error));
         }
     }

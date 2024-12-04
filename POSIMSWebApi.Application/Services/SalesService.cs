@@ -1,11 +1,14 @@
 ﻿using Domain.Entities;
+using Domain.Error;
 using Domain.Interfaces;
+using LanguageExt.Common;
 using Microsoft.EntityFrameworkCore;
 using POSIMSWebApi.Application.Dtos.ProductDtos;
 using POSIMSWebApi.Application.Dtos.Sales;
 using POSIMSWebApi.Application.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -20,14 +23,15 @@ namespace POSIMSWebApi.Application.Services
             _unitOfWork = unitOfWork;
         }
 
-        public async Task CreateSales(CreateOrEditSalesDto input)
+        public async Task<Result<string>> CreateSales(CreateOrEditSalesDto input)
         {
-            if (input.SalesHeaderId is null)
-            {
-                //return for now still haven't decided how to handle errors
-                //planning to make result pattern
-                return;
-            }
+            //if (input.SalesHeaderId is null)
+            //{
+            //    var error = new ValidationException("Error! SalesHeaderId Can't be null.");
+            //    return new Result<string>(error);
+            //    //return for now still haven't decided how to handle errors
+            //    //planning to make result pattern
+            //}
 
             var listOfProductIds = input.CreateSalesDetailDtos.Select(e => e.ProductId).ToList();
 
@@ -40,23 +44,32 @@ namespace POSIMSWebApi.Application.Services
 
             if (product.Count <= 0)
             {
-                return;
-            }
-
-            var customer = await _unitOfWork.Customer.FirstOrDefaultAsync(e => e.Id == input.CustomerId);
-            if (customer == null)
-            {
-                return;
+                var error = new ValidationException("Error! Product not found!");
+                return new Result<string>(error);
             }
 
             //create sales header
-            var salesHeader = new SalesHeader
+            var salesHeader = new SalesHeader()
             {
                 Id = Guid.NewGuid(),
-                CustomerId = customer.Id,
                 TotalAmount = 0,
                 TransNum = await GenerateTransNum()
             };
+
+            if (input.CustomerId is not null)
+            {
+                var customer = await _unitOfWork.Customer.FirstOrDefaultAsync(e => e.Id == input.CustomerId);
+
+                if (customer is null) 
+                {
+                    var error = new ValidationException("Error! Customer not found.");
+                    return new Result<string>(error);
+                }
+
+                salesHeader.CustomerId = customer.Id;
+            }
+
+            //figure out a way to deplete stocks based on batchnumber
 
             var salesDetails = new List<SalesDetail>();
             foreach (var sDetail in input.CreateSalesDetailDtos)
@@ -77,6 +90,10 @@ namespace POSIMSWebApi.Application.Services
                 salesDetails.Add(saleDetail);
             }
 
+            await _unitOfWork.SalesHeader.AddAsync(salesHeader);
+            await _unitOfWork.SalesDetail.AddRangeAsync(salesDetails);
+            _unitOfWork.Complete();
+            return new Result<string>("Success!");
         }
 
         private async Task<string> GenerateTransNum()
@@ -89,6 +106,7 @@ namespace POSIMSWebApi.Application.Services
             var transNum = $"T{shortDate}-{formattedCount}";
             return transNum;
         }
+
 
         private decimal CalculateAmount(List<CreateProductSales> product, int productId, decimal quantity)
         {

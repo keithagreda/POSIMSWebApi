@@ -1,9 +1,10 @@
-﻿using POSIMSWebApi.Application.Dtos.Sales;
+﻿using LanguageExt.Common;
+using POSIMSWebApi.Application.Dtos.Sales;
 
 namespace POSIMSWebApi.Application.Interfaces
 {
     public interface ISalesService
     {
-        Task CreateSales(CreateOrEditSalesDto input);
+        Task<Result<string>> CreateSales(CreateOrEditSalesDto input);
     }
 }
