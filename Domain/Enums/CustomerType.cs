@@ -18,4 +18,12 @@ namespace Domain.Enums
         Open = 0,
         Closed = 1
     }
+
+    public enum TransactionEnum
+    {
+        Receiving = 0,
+        Return = 1,
+        Sales = 2,
+        Damage = 3,
+    }
 }

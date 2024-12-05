@@ -19,6 +19,7 @@ namespace Domain.Interfaces
         IInventoryBeginningDetailsRepository InventoryBeginningDetails { get; }
         ICustomerRepository Customer { get; }
         IStorageLocationRepository StorageLocation { get; }
+        IRemarksRepository Remarks { get; }
         int Complete();
     }
 }

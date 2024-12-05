@@ -63,8 +63,12 @@ namespace POSIMSWebApi.Application.Services
             var generatedProdCode = GenerateProdCode(input.Name);
 
             var getExistingCode = await query.Where(e => e.ProdCode.Contains(generatedProdCode)).ToListAsync();
+            var prodCode = $"{generatedProdCode}";
+            if (getExistingCode.Count > 0)
+            {
+                prodCode = $"{prodCode}{getExistingCode.Count + 1}";
+            }
 
-            var prodCode = $"{generatedProdCode}{getExistingCode.Count + 1}";
 
 
             ProductCategory? categ = null;

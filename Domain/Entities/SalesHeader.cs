@@ -10,6 +10,10 @@ namespace Domain.Entities
         public Guid? CustomerId { get; set; }
         [ForeignKey("CustomerId")]
         public Customer CustomerFk { get; set; }
+        public Guid? RemarksId { get; set; }
+        [ForeignKey("RemarksId")]
+        public Remarks RemarksFk { get; set; }
         public ICollection<SalesDetail> SalesDetails { get; set; }
+
     }
 }

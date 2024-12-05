@@ -23,6 +23,50 @@ namespace POSIMSWebApi.Application.Services
             _unitOfWork = unitOfWork;
         }
 
+        public async Task<Result<string>> CreateSalesFromTransNum(TransNumReaderDto input)
+        {
+            //access product stock details
+            var stocksReceiving = _unitOfWork.StocksReceiving.GetQueryable()
+                .Include(e => e.StocksHeaderFk);
+
+            //projection to get details product id and loc
+            var productDetails = await stocksReceiving.Where(e => e.TransNum == input.TransNum).Select(e => new
+            {
+                e.StocksHeaderFk.ProductId,
+                e.StocksHeaderFk.StorageLocationId
+            }).FirstOrDefaultAsync();
+
+            //TO DO: Validation for product details
+
+            //get overall stocks for the same product in the same location
+            var getStocks = stocksReceiving.ThenInclude(e => e.StocksDetails)
+                .Where(e => e.StocksHeaderFk.ProductId == productDetails.ProductId
+                && e.StocksHeaderFk.StorageLocationId == productDetails.StorageLocationId)
+                .Select(e =>
+                {
+                    e.StocksHeaderFk.StocksDetails.Take(input.Quantity).to
+                })
+                
+                ;
+
+            //check if stocks are available 
+            var processedStocks = new List<StocksDetail>();
+            var stocksCount = await getStocks.CountAsync();
+            if (stocksCount < input.Quantity)
+            {
+                //TO DO::
+                //make remarks for this sales that stocks were in a deficit but still continue the transaction
+                //since stocks were on hand
+            }
+
+            if (stocksCount > input.Quantity)
+            {
+                //
+                var getStocksQty = await getStocks.Take(input.Quantity);
+                foreach(var items in await getStocks.Take(input.Quantity))
+            }
+        }
+
         public async Task<Result<string>> CreateSales(CreateOrEditSalesDto input)
         {
             //if (input.SalesHeaderId is null)
