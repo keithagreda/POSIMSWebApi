@@ -106,35 +106,35 @@ namespace POSIMSWebApi.Application.Services
             //var stock = await _unitOfWork.StocksHeader.GetQueryable().Include(e => e.StocksDetails)
             //    .Where(e=> e.ProductId == input.ProductId && e.StorageLocationId == input.StorageLocationId)
 
-            var stock = _unitOfWork.StocksDetail.GetQueryable().Include(e => e.StocksHeaderFk)
-                .Where(e => e.Unavailable == false && e.StocksHeaderFk.ProductId == input.ProductId
-                && e.StocksHeaderFk.StorageLocationId == input.StorageLocationId)
-                .OrderBy(e => e.StocksHeaderFk.ExpirationDate).Take((int)input.Quantity);
+            //var stock = _unitOfWork.StocksDetail.GetQueryable().Include(e => e.StocksHeaderFk)
+            //    .Where(e => e.Unavailable == false && e.StocksHeaderFk.ProductId == input.ProductId
+            //    && e.StocksHeaderFk.StorageLocationId == input.StorageLocationId)
+            //    .OrderBy(e => e.StocksHeaderFk.ExpirationDate).Take((int)input.Quantity);
 
             
 
-            var stockDetailToBeSold = await stock.ToArrayAsync();
-            var errorList = new List<string>();
-            var stockDetailToBeSoldCount = stockDetailToBeSold.Count();
-            if (stockDetailToBeSoldCount >= 0)
-            {
-                errorList.Add("Error! there are no existing stocks.");
-            }
-            if(stockDetailToBeSoldCount < input.Quantity)
-            {
-                errorList.Add("There are no existing stocks for this item.");
-            }
-            if(errorList.Count <= 0)
-            {
-                var combinedError = string.Join("; ", errorList);
-                return new Result<string>(new Exception(combinedError));
-            }
-            foreach (var item in stockDetailToBeSold)
-            {
-                item.Unavailable = true;
-                await _unitOfWork.StocksDetail.UpdateAsync(item);
-            }
-            _unitOfWork.Complete();
+            //var stockDetailToBeSold = await stock.ToArrayAsync();
+            //var errorList = new List<string>();
+            //var stockDetailToBeSoldCount = stockDetailToBeSold.Count();
+            //if (stockDetailToBeSoldCount >= 0)
+            //{
+            //    errorList.Add("Error! there are no existing stocks.");
+            //}
+            //if(stockDetailToBeSoldCount < input.Quantity)
+            //{
+            //    errorList.Add("There are no existing stocks for this item.");
+            //}
+            //if(errorList.Count <= 0)
+            //{
+            //    var combinedError = string.Join("; ", errorList);
+            //    return new Result<string>(new Exception(combinedError));
+            //}
+            //foreach (var item in stockDetailToBeSold)
+            //{
+            //    item.Unavailable = true;
+            //    await _unitOfWork.StocksDetail.UpdateAsync(item);
+            //}
+            //_unitOfWork.Complete();
             return new Result<string>("Success!");
         }
     }

@@ -26,6 +26,4 @@ namespace Domain.Entities
         [ForeignKey("SalesHeaderId")]
         public SalesHeader SalesHeaderFk { get; set; }
     }
-
-  
 }

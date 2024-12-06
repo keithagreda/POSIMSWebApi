@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace POSIMSWebApi.Application.Services
@@ -23,14 +24,19 @@ namespace POSIMSWebApi.Application.Services
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<Result<string>> CreateSalesFromTransNum(TransNumReaderDto input)
+        /// <summary>
+        /// FOR SINGLE TRANSNUM FIRST
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public async Task<Result<string>> CreateSalesFromTransNum(CreateOrEditSalesDto input)
         {
             //access product stock details
             var stocksReceiving = _unitOfWork.StocksReceiving.GetQueryable()
                 .Include(e => e.StocksHeaderFk);
 
             //projection to get details product id and loc
-            var productDetails = await stocksReceiving.Where(e => e.TransNum == input.TransNum).Select(e => new
+            var productStockDetails = await stocksReceiving.Where(e => e.TransNum == input.CreateSalesDetailDtos.TransNumReaderDto.TransNum).Select(e => new
             {
                 e.StocksHeaderFk.ProductId,
                 e.StocksHeaderFk.StorageLocationId
@@ -40,46 +46,29 @@ namespace POSIMSWebApi.Application.Services
 
             //get overall stocks for the same product in the same location
             var getStocks = stocksReceiving.ThenInclude(e => e.StocksDetails)
-                .Where(e => e.StocksHeaderFk.ProductId == productDetails.ProductId
-                && e.StocksHeaderFk.StorageLocationId == productDetails.StorageLocationId)
-                .Select(e =>
-                {
-                    e.StocksHeaderFk.StocksDetails.Take(input.Quantity).to
-                })
-                
-                ;
+                .Where(e => e.StocksHeaderFk.ProductId == productStockDetails.ProductId
+                && e.StocksHeaderFk.StorageLocationId == productStockDetails.StorageLocationId)
+                .OrderByDescending(e => e.StocksHeaderFk.ExpirationDate)
+                .SelectMany(e => e.StocksHeaderFk.StocksDetails).Where(e => e.Unavailable == false);
 
-            //check if stocks are available 
             var processedStocks = new List<StocksDetail>();
             var stocksCount = await getStocks.CountAsync();
-            if (stocksCount < input.Quantity)
+            if (stocksCount < input.CreateSalesDetailDtos.TransNumReaderDto.Quantity)
             {
                 //TO DO::
-                //make remarks for this sales that stocks were in a deficit but still continue the transaction
+                //make remarks for sales that stocks were in a deficit but still continue the transaction
                 //since stocks were on hand
             }
 
-            if (stocksCount > input.Quantity)
+            var getStocksQty = await getStocks.ToListAsync();
+
+            for(var i = 0; i < input.CreateSalesDetailDtos.TransNumReaderDto.Quantity; i++)
             {
-                //
-                var getStocksQty = await getStocks.Take(input.Quantity);
-                foreach(var items in await getStocks.Take(input.Quantity))
+                getStocksQty[i].Unavailable = true; 
             }
-        }
 
-        public async Task<Result<string>> CreateSales(CreateOrEditSalesDto input)
-        {
-            //if (input.SalesHeaderId is null)
-            //{
-            //    var error = new ValidationException("Error! SalesHeaderId Can't be null.");
-            //    return new Result<string>(error);
-            //    //return for now still haven't decided how to handle errors
-            //    //planning to make result pattern
-            //}
-
-            var listOfProductIds = input.CreateSalesDetailDtos.Select(e => e.ProductId).ToList();
-
-            var product = await _unitOfWork.Product.GetQueryable().Where(e => listOfProductIds.Contains(e.Id)).Select(e => new CreateProductSales
+            //proceed to creating sales detail
+            var product = await _unitOfWork.Product.GetQueryable().Where(e => e.Id == productStockDetails.ProductId).Select(e => new CreateProductSales
             {
                 Id = e.Id,
                 Name = e.Name,
@@ -104,7 +93,7 @@ namespace POSIMSWebApi.Application.Services
             {
                 var customer = await _unitOfWork.Customer.FirstOrDefaultAsync(e => e.Id == input.CustomerId);
 
-                if (customer is null) 
+                if (customer is null)
                 {
                     var error = new ValidationException("Error! Customer not found.");
                     return new Result<string>(error);
@@ -115,28 +104,97 @@ namespace POSIMSWebApi.Application.Services
 
             //figure out a way to deplete stocks based on batchnumber
 
-            var salesDetails = new List<SalesDetail>();
-            foreach (var sDetail in input.CreateSalesDetailDtos)
+            var currAmount = CalculateAmount(product, productStockDetails.ProductId, input.CreateSalesDetailDtos.TransNumReaderDto.Quantity);
+            var saleDetail = new SalesDetail
             {
-                var currProduct = product.FirstOrDefault(e => e.Id == sDetail.ProductId);
-                var currAmount = CalculateAmount(product, sDetail.ProductId, sDetail.Quantity);
-                var saleDetail = new SalesDetail
-                {
-                    Id = Guid.NewGuid(),
-                    ActualSellingPrice = sDetail.ActualSellingPrice,
-                    Amount = currAmount,
-                    Quantity = sDetail.Quantity,
-                    ProductPrice = currProduct != null ? currProduct.Price : 0,
-                    ProductId = sDetail.ProductId,
-                    Discount = CalculateDiscount(sDetail.ActualSellingPrice, currAmount),
-                    SalesHeaderId = salesHeader.Id
-                };
-                salesDetails.Add(saleDetail);
-            }
+                Id = Guid.NewGuid(),
+                ActualSellingPrice = input.CreateSalesDetailDtos.ActualSellingPrice,
+                Amount = currAmount,
+                Quantity = input.CreateSalesDetailDtos.TransNumReaderDto.Quantity,
+                ProductPrice = product != null ? product.FirstOrDefault().Price : 0,
+                ProductId = productStockDetails.ProductId,
+                Discount = CalculateDiscount(input.CreateSalesDetailDtos.ActualSellingPrice, currAmount),
+                SalesHeaderId = salesHeader.Id
+            };
+
+            
 
             await _unitOfWork.SalesHeader.AddAsync(salesHeader);
-            await _unitOfWork.SalesDetail.AddRangeAsync(salesDetails);
+            await _unitOfWork.SalesDetail.AddAsync(saleDetail);
             _unitOfWork.Complete();
+            return new Result<string>("Success!");
+        }
+
+        public async Task<Result<string>> CreateSales(CreateOrEditSalesDto input)
+        {
+            //if (input.SalesHeaderId is null)
+            //{
+            //    var error = new ValidationException("Error! SalesHeaderId Can't be null.");
+            //    return new Result<string>(error);
+            //    //return for now still haven't decided how to handle errors
+            //    //planning to make result pattern
+            //}
+
+            //var listOfProductIds = input.CreateSalesDetailDtos.Select(e => e.ProductId).ToList();
+
+            //var product = await _unitOfWork.Product.GetQueryable().Where(e => listOfProductIds.Contains(e.Id)).Select(e => new CreateProductSales
+            //{
+            //    Id = e.Id,
+            //    Name = e.Name,
+            //    Price = e.Price
+            //}).ToListAsync();
+
+            //if (product.Count <= 0)
+            //{
+            //    var error = new ValidationException("Error! Product not found!");
+            //    return new Result<string>(error);
+            //}
+
+            ////create sales header
+            //var salesHeader = new SalesHeader()
+            //{
+            //    Id = Guid.NewGuid(),
+            //    TotalAmount = 0,
+            //    TransNum = await GenerateTransNum()
+            //};
+
+            //if (input.CustomerId is not null)
+            //{
+            //    var customer = await _unitOfWork.Customer.FirstOrDefaultAsync(e => e.Id == input.CustomerId);
+
+            //    if (customer is null) 
+            //    {
+            //        var error = new ValidationException("Error! Customer not found.");
+            //        return new Result<string>(error);
+            //    }
+
+            //    salesHeader.CustomerId = customer.Id;
+            //}
+
+            ////figure out a way to deplete stocks based on batchnumber
+
+            //var salesDetails = new List<SalesDetail>();
+            //foreach (var sDetail in input.CreateSalesDetailDtos)
+            //{
+            //    var currProduct = product.FirstOrDefault(e => e.Id == sDetail.ProductId);
+            //    var currAmount = CalculateAmount(product, sDetail.ProductId, sDetail.Quantity);
+            //    var saleDetail = new SalesDetail
+            //    {
+            //        Id = Guid.NewGuid(),
+            //        ActualSellingPrice = sDetail.ActualSellingPrice,
+            //        Amount = currAmount,
+            //        Quantity = sDetail.Quantity,
+            //        ProductPrice = currProduct != null ? currProduct.Price : 0,
+            //        ProductId = sDetail.ProductId,
+            //        Discount = CalculateDiscount(sDetail.ActualSellingPrice, currAmount),
+            //        SalesHeaderId = salesHeader.Id
+            //    };
+            //    salesDetails.Add(saleDetail);
+            //}
+
+            //await _unitOfWork.SalesHeader.AddAsync(salesHeader);
+            //await _unitOfWork.SalesDetail.AddRangeAsync(salesDetails);
+            //_unitOfWork.Complete();
             return new Result<string>("Success!");
         }
 

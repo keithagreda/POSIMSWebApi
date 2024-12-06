@@ -19,7 +19,20 @@ namespace POSIMSWebApi.Controllers
             _unitOfWork = unitOfWork;
         }
 
-        [HttpPost]
+        [HttpPost("CreateSalesFromTransNum")]
+        public async Task<IActionResult> CreateSalesFromTransNum(CreateOrEditSalesDto input)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            var result = await _salesService.CreateSalesFromTransNum(input);
+            _unitOfWork.Complete();
+
+            return result.Match<IActionResult>(
+           success => CreatedAtAction(nameof(CreateSalesFromTransNum), new { id = input.CreateSalesDetailDtos.TransNumReaderDto.TransNum }, success),
+           error => BadRequest(error));
+        }
+
+        [HttpPost("CreateSales")]
         public async Task<IActionResult> CreateSales(CreateOrEditSalesDto input)
         {
             if (!ModelState.IsValid)

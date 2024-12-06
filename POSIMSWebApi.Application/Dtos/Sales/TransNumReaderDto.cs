@@ -3,6 +3,6 @@
     public class TransNumReaderDto
     {
         public string TransNum { get; set; }
-        public decimal Quantity { get; set; }
+        public int Quantity { get; set; }
     }
 }
