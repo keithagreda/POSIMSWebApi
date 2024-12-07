@@ -68,9 +68,11 @@ namespace POSIMSWebApi.Application.Services
             );
         }
 
+
         private string TransNumGenerator(int productId, int storageId)
         {
-            var prodCode =  _unitOfWork.Product.GetQueryable().Where(e => e.Id == productId).Select(e => e.ProdCode).FirstOrDefault();
+            var dateNow = DateTime.Now.Date;
+            var prodCode =  _unitOfWork.Product.GetQueryable().Where(e => e.Id == productId && e.CreationTime.Date == dateNow).Select(e => e.ProdCode ).FirstOrDefault();
             var stockReceiving = _unitOfWork.StocksReceiving.GetQueryable();
             var currentTransCount = stockReceiving.Count() + 1;
             string datePart = DateTime.Now.ToString("yyMMdd");

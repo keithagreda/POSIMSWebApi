@@ -50,7 +50,7 @@ namespace POSIMSWebApi.Application.Services
                 {
                     ProductId = group.Key,
                     TotalQuantity = group.Sum(e => e.Quantity)
-                });
+                }).ToList();
 
             // Sales Details
             var salesDetails = _unitOfWork.SalesDetail.GetQueryable()

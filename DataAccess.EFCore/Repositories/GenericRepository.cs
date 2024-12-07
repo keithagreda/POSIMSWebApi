@@ -38,6 +38,39 @@ namespace DataAccess.EFCore.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<int> UpdateRangeAsync<TEntity>(
+            IEnumerable<TEntity> entities,
+            Expression<Func<TEntity, bool>> predicate = null,
+            Action<TEntity> updateAction = null,
+            CancellationToken cancellationToken = default) where TEntity : class
+        {
+            if (entities == null || !entities.Any())
+            {
+                return 0;
+            }
+
+            // Apply custom update action if provided
+            if (updateAction != null)
+            {
+                foreach (var entity in entities)
+                {
+                    updateAction(entity);
+                }
+            }
+
+            // If a predicate is provided, filter and validate the entities
+            if (predicate != null)
+            {
+                entities = entities.Where(predicate.Compile());
+            }
+
+            // Bulk update approach
+            _context.Set<TEntity>().UpdateRange(entities);
+
+            // Save changes and return the number of affected rows
+            return await _context.SaveChangesAsync(cancellationToken);
+        }
+
         public void AddRange(IEnumerable<T> entities)
         {
             _context.Set<T>().AddRange(entities);

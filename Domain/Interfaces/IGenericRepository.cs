@@ -15,6 +15,12 @@ namespace Domain.Interfaces
         IQueryable<T> GetQueryable();
         Task<T> GetByGuidAsync(Guid id);
         Task UpdateAsync(T entity);
+        Task<int> UpdateRangeAsync<TEntity>(
+         IEnumerable<TEntity> entities,
+         Expression<Func<TEntity, bool>> predicate = null,
+         Action<TEntity> updateAction = null,
+         CancellationToken cancellationToken = default
+     ) where TEntity : class;
         IEnumerable<T> GetAll();
         IEnumerable<T> Find(Expression<Func<T, bool>> expression);
         Task<IQueryable<T>> FindAsyncQueryable(Expression<Func<T, bool>> expression);

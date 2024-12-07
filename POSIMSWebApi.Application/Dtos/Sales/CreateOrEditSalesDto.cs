@@ -12,7 +12,7 @@ namespace POSIMSWebApi.Application.Dtos.Sales
         public Guid? SalesHeaderId { get; set; }
         public Guid? CustomerId { get; set; }
         [Required]
-        public CreateSalesDetailDto CreateSalesDetailDtos { get; set; }
+        public List<CreateSalesDetailDto> CreateSalesDetailDtos { get; set; }
     }
 
     public class CreateSalesDetailDto
@@ -23,6 +23,14 @@ namespace POSIMSWebApi.Application.Dtos.Sales
         public decimal ProductPrice { get; set; }
         public decimal Amount { get; set; }
         public decimal Discount { get; set; }
+    }
+
+    public class TransDetails
+    {
+        public string TransNum { get; set; }
+        public int Quantity { get; set; }
+        public int ProductId { get; set; }
+        public int StorageLocationId { get; set; }
     }
 
 }

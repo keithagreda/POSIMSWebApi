@@ -10,6 +10,7 @@ using Serilog;
 using System;
 using POSIMSWebApi.Middleware;
 using POSIMSWebApi.Infrastructure;
+using Microsoft.AspNetCore.Builder;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,8 +46,10 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
-}
+    //app.UseOpenApi();
+    //app.UseReDoc();      // Optional: Serve ReDoc UI
 
+}
 
 
 app.UseHttpsRedirection();
