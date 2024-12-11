@@ -11,7 +11,7 @@ namespace POSIMSWebApi.Migrations
 {
     [DbContext(typeof(SerilogContext))]
     [Migration("20241111073827_init")]
-    partial class init
+    partial class initialMigration
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

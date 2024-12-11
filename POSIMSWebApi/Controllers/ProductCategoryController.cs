@@ -8,6 +8,8 @@ using Microsoft.EntityFrameworkCore;
 using DataAccess.EFCore;
 using Domain.Entities;
 using Domain.Interfaces;
+using Domain.ApiResponse;
+using POSIMSWebApi.Application.Dtos.ProductCategory;
 
 namespace POSIMSWebApi.Controllers
 {
@@ -24,14 +26,27 @@ namespace POSIMSWebApi.Controllers
             _unitOfWork = unitOfWork;
         }
         [HttpGet("GetProductCategory")]
-        public async Task<ActionResult> GetProductCategory()
+        public async Task<ActionResult<ApiResponse<IList<ProductCategoryDto>>>> GetProductCategory()
         {
             var data = await _unitOfWork.ProductCategory.GetAllAsync();
+
+            //convert into dto
+            var productCategoriesDto = new List<ProductCategoryDto>();
+            foreach (var item in data)
+            {
+                var res = new ProductCategoryDto
+                {
+                    Id = item.Id,
+                    Name = item.Name,
+                };
+                productCategoriesDto.Add(res);
+            }
+
             if(data.Count <= 0)
             {
                 throw new ArgumentNullException("No Products Found", nameof(data));
             }
-            return Ok(data);
+            return Ok(ApiResponse<IList<ProductCategoryDto>>.Success(productCategoriesDto));
         }
         [HttpPost]
         public ActionResult AddProductCategory()

@@ -31,6 +31,7 @@
     },
     "IIS Express": {
       "commandName": "IISExpress",
+      "stopAtTheEndOfDebugSession": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {

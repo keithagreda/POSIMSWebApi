@@ -24,6 +24,15 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddOpenApiDocument(config =>
+{
+    config.Title = "BrigadaCanteen API";
+    config.Description = "API documentation for BrigadaCanteen using NSwag.";
+    config.Version = "v1";
+
+});
+
 builder.Services.AddDbContext<ApplicationContext>(options =>
 options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 builder.Services.AddDbContext<SerilogContext>(options => options.UseSqlite(builder.Configuration.GetConnectionString("SqlLite")));
@@ -38,22 +47,30 @@ builder.Services.AddScoped<SoftDeleteInterceptor>();
 builder.Services.AddScoped<AuditInterceptor>();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(builder => builder.AllowAnyOrigin().AllowAnyHeader().WithMethods("GET", "POST", "PUT", "DELETE"));
+});
 
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
-    //app.UseOpenApi();
+    //app.UseSwagger();
+    ////app.UseSwaggerUI();
+    //app.UseDeveloperExceptionPage();
+    //app.UseForwardedHeaders();
+    app.UseOpenApi();    // Serve OpenAPI/Swagger documents
+    app.UseSwaggerUi(); // Serve Swagger UI
+    app.UseReDoc();      // Optional: Serve ReDoc UI
     //app.UseReDoc();      // Optional: Serve ReDoc UI
 
 }
 
 
 app.UseHttpsRedirection();
-
+app.UseCors();
 app.UseAuthorization();
 
 app.UseMiddleware<ExceptionHandlingMiddleware>();

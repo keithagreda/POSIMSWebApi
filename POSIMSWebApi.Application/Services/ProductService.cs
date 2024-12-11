@@ -1,5 +1,7 @@
-﻿using Domain.Entities;
+﻿using Domain.ApiResponse;
+using Domain.Entities;
 using Domain.Interfaces;
+using LanguageExt.Common;
 using Microsoft.EntityFrameworkCore;
 using POSIMSWebApi.Application.Dtos.ProductDtos;
 using POSIMSWebApi.Application.Interfaces;
@@ -14,19 +16,24 @@ namespace POSIMSWebApi.Application.Services
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<IList<ProductWithCategDto>> GetAllProductsWithCategory()
+        public async Task<ApiResponse<IList<ProductWithCategDto>>> GetAllProductsWithCategory()
         {
-            var data = _unitOfWork.Product.GetQueryable().Include(e => e.ProductCategories).Select(e => new ProductWithCategDto
+            var data = await _unitOfWork.Product.GetQueryable().Include(e => e.ProductCategories).Select(e => new ProductWithCategDto
             {
                 ProductId = e.Id,
                 ProductName = e.Name,
                 ProductCategories = e.ProductCategories.Select(e => e.Name).ToList()
-            }).AsNoTracking().AsSplitQuery();
+            }).AsNoTracking().AsSplitQuery().ToListAsync();
 
-            return await data.ToListAsync();
+            if(data.Count <= 0)
+            {
+                return ApiResponse<IList<ProductWithCategDto>>.Fail("Error! No Products With Category Found!");
+            }
+
+            return ApiResponse<IList<ProductWithCategDto>>.Success(data, "Request Success!");
         }
 
-        public async Task<string> CreateProduct(CreateProductDto input)
+        public async Task<ApiResponse<string>> CreateProduct(CreateProductDto input)
         {
             //data
             //validation
@@ -56,8 +63,7 @@ namespace POSIMSWebApi.Application.Services
 
                 //    }
                 //}
-                
-                return "Invalid action! Product name already exists!";
+                return ApiResponse<string>.Fail("Invalid action! Product name already exists!");
             }
             //getCateg
             var generatedProdCode = GenerateProdCode(input.Name);
@@ -75,7 +81,7 @@ namespace POSIMSWebApi.Application.Services
             if(input.ProductCategoryId != 0)
             {
                 categ = await _unitOfWork.ProductCategory.FirstOrDefaultAsync(e => e.Id == input.ProductCategoryId);
-                if (categ is null) return "Product Creation failed input Category doesn't exist!";
+                if (categ is null) return ApiResponse<string>.Fail("Product Creation failed input Category doesn't exist!");
             }
             var newProduct = new Product
             {
@@ -89,7 +95,7 @@ namespace POSIMSWebApi.Application.Services
             _unitOfWork.Product.Add(newProduct);
             _unitOfWork.Complete();
             _unitOfWork.Dispose();
-            return $"Successfully added {input.Name} in the products list!";
+            return ApiResponse<string>.Success($"Successfully added {input.Name} in the products list!");
         }
 
         //private async Task<bool> ValidateProductName(string productName)

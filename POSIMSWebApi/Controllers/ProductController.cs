@@ -1,5 +1,7 @@
-﻿using Domain.Entities;
+﻿using Domain.ApiResponse;
+using Domain.Entities;
 using Domain.Interfaces;
+using LanguageExt.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -21,8 +23,8 @@ namespace POSIMSWebApi.Controllers
             _productService = productService;
         }
 
-        [HttpPost("AddProduct")]
-        public async Task<IActionResult> AddProductCategory([FromQuery]CreateProductDto input)
+        [HttpPost("CreateProduct")]
+        public async Task<ActionResult<ApiResponse<string>>> CreateProduct(CreateProductDto input)
         {
             try
             {
@@ -38,21 +40,45 @@ namespace POSIMSWebApi.Controllers
             }
         }
         [HttpGet("GetProducts")]
-        public async Task<IActionResult> GetProducts()
+        public async Task<ActionResult<ApiResponse<IList<ProductDto>>>> GetProducts()
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
             var data = await _unitOfWork.Product.GetAllProductsAsync();
 
-            if (!ModelState.IsValid) 
-                return BadRequest(ModelState);
-            return Ok(data);
+            var result = new List<ProductDto>();
+            foreach (var product in data)
+            {
+                var res = new ProductDto
+                {
+                    DaysTillExpiration = product.DaysTillExpiration,
+                    Id = product.Id,
+                    Name = product.Name,
+                    Price = product.Price,
+                    ProdCode = product.ProdCode,
+                };
+                result.Add(res);
+            }
+            return Ok(ApiResponse<IList<ProductDto>>.Success(result));
         }
 
         [HttpGet("GetAllProductsWithCateg")]
-        public async Task<IActionResult> GetAllProductsWithCateg()
+        public async Task<ActionResult<ApiResponse<IList<ProductWithCategDto>>>> GetAllProductsWithCateg()
         {
             var data = await _productService.GetAllProductsWithCategory();
-            if(!ModelState.IsValid) return BadRequest(ModelState);
-            return Ok(data);
+            
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            try
+            {
+                return Ok(data);
+
+            }
+            catch (Exception ex)
+            {
+
+                throw new Exception(ex.Message);
+            }
         }
 
         [HttpGet("GetProductWithCateg/{id}")]
