@@ -5,6 +5,7 @@ using LanguageExt.Common;
 using Microsoft.EntityFrameworkCore;
 using POSIMSWebApi.Application.Dtos.ProductDtos;
 using POSIMSWebApi.Application.Interfaces;
+using System.Linq;
 
 namespace POSIMSWebApi.Application.Services
 {
@@ -77,11 +78,11 @@ namespace POSIMSWebApi.Application.Services
 
 
 
-            ProductCategory? categ = null;
-            if(input.ProductCategoryId != 0)
+            List<ProductCategory> categ = new List<ProductCategory>();
+            if(input.ProductCategories.Count != 0)
             {
-                categ = await _unitOfWork.ProductCategory.FirstOrDefaultAsync(e => e.Id == input.ProductCategoryId);
-                if (categ is null) return ApiResponse<string>.Fail("Product Creation failed input Category doesn't exist!");
+                categ = await _unitOfWork.ProductCategory.GetQueryable().Where(e => input.ProductCategories.Select(e => e.Id).Contains(e.Id)).ToListAsync();
+                if (categ.Count <= 0) return ApiResponse<string>.Fail("Product Creation failed input Category doesn't exist!");
             }
             var newProduct = new Product
             {
@@ -89,7 +90,7 @@ namespace POSIMSWebApi.Application.Services
                 Price = input.Price,
                 DaysTillExpiration = input.DaysTillExpiration,
                 ProdCode = prodCode,
-                ProductCategories = new List<ProductCategory>() { categ }
+                ProductCategories = categ
             };
 
             _unitOfWork.Product.Add(newProduct);

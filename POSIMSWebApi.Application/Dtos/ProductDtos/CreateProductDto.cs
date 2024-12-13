@@ -1,4 +1,5 @@
 ﻿using Domain.Entities;
+using POSIMSWebApi.Application.Dtos.ProductCategory;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,8 +12,8 @@ namespace POSIMSWebApi.Application.Dtos.ProductDtos
     {
         public string Name { get; set; }
         public int DaysTillExpiration { get; set; }
-        public int  Price { get; set; }
-        public int ProductCategoryId { get; set; }
+        public decimal  Price { get; set; }
+        public List<ProductCategoryDto> ProductCategories { get; set; } = new List<ProductCategoryDto>();
     }
 
     public class CreateProductSales

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using POSIMSWebApi.Application.Dtos;
+using POSIMSWebApi.Application.Dtos.ProductCategory;
 using POSIMSWebApi.Application.Dtos.ProductDtos;
 using POSIMSWebApi.Application.Interfaces;
 
@@ -94,6 +95,34 @@ namespace POSIMSWebApi.Controllers
             };
             if (!ModelState.IsValid) return BadRequest(ModelState);
             return Ok(result);
+        }
+        [HttpGet("GetProductForEdit/{id}")]
+        public async Task<ActionResult<ApiResponse<CreateProductDto>>> GetProductForEdit(int id)
+        {
+            if (id == 0)
+            {
+                return ApiResponse<CreateProductDto>.Fail("Invalid action! Id can't be null");
+            }
+            var data = await _unitOfWork.Product.GetQueryable().Include(e => e.ProductCategories)
+                .Select(e => new CreateProductDto
+                {
+
+                    DaysTillExpiration = e.DaysTillExpiration,
+                    Name = e.Name,
+                    Price = e.Price,
+                    ProductCategories = e.ProductCategories.Select(e => new ProductCategoryDto
+                    {
+                        Name = e.Name,
+                        Id = e.Id
+                    }).ToList()
+                }).FirstOrDefaultAsync();
+
+            if(data is null)
+            {
+                return ApiResponse<CreateProductDto>.Fail("Error! Product Not Found.");
+            }
+
+            return Ok(ApiResponse<CreateProductDto>.Success(data));
         }
     }
 }
