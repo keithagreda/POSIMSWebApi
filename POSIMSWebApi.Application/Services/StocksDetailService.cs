@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Domain.ApiResponse;
+using Domain.Entities;
 using Domain.Error;
 using Domain.Interfaces;
 using LanguageExt.Common;
@@ -31,7 +32,7 @@ namespace POSIMSWebApi.Application.Services
         /// <param name="input"></param>
         /// <returns>string</returns>
         /// <exception cref="ArgumentNullException"></exception>
-        public async Task<Result<int>> AutoCreateStocks(CreateStocks input, string transNum)
+        public async Task<ApiResponse<int>> AutoCreateStocks(CreateStocks input, string transNum)
         {
             var productQ = await _unitOfWork.Product.FindAsyncQueryable(e => e.Id == input.ProductId);
             var stock = _unitOfWork.StocksDetail.GetQueryable().Include(e => e.StocksHeaderFk)
@@ -54,13 +55,12 @@ namespace POSIMSWebApi.Application.Services
             var prod = await productQ.Select(e => new { e.ProdCode, e.DaysTillExpiration }).FirstOrDefaultAsync();
             if (prod is null)
             {
-                var error = new ValidationException("Error! Product not found., Param: ProductId.");
-                return new Result<int>(error);
+                return ApiResponse<int>.Fail("Error! Product not found., Param: ProductId.");
             }
             var daysTillExp = dateToday.AddDays(prod.DaysTillExpiration);
             var stocksCreated = await ListOfStocksToBeSaved(input, stockNum, transNum, daysTillExp);
             await _unitOfWork.StocksDetail.AddRangeAsync(stocksCreated.StockDetails);
-            return new Result<int>(stocksCreated.HeaderId);
+            return ApiResponse<int>.Success(stocksCreated.HeaderId);
         }
 
         private async Task<ReturnListOfStocksToBeSaved> ListOfStocksToBeSaved(CreateStocks input, int prevStockNum, string transNum, DateTimeOffset daysTillExp)

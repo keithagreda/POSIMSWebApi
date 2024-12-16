@@ -1,14 +1,17 @@
 ﻿using Domain.ApiResponse;
 using Domain.Entities;
 using Domain.Interfaces;
+using LanguageExt;
 using LanguageExt.Common;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using POSIMSWebApi.Application.Dtos;
+using POSIMSWebApi.Application.Dtos.Pagination;
 using POSIMSWebApi.Application.Dtos.ProductCategory;
 using POSIMSWebApi.Application.Dtos.ProductDtos;
 using POSIMSWebApi.Application.Interfaces;
+using POSIMSWebApi.QueryExtensions;
 
 namespace POSIMSWebApi.Controllers
 {
@@ -41,26 +44,26 @@ namespace POSIMSWebApi.Controllers
             }
         }
         [HttpGet("GetProducts")]
-        public async Task<ActionResult<ApiResponse<IList<ProductDto>>>> GetProducts()
+        public async Task<ActionResult<ApiResponse<IList<ProductV1Dto>>>> GetProducts()
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
-            var data = await _unitOfWork.Product.GetAllProductsAsync();
-
-            var result = new List<ProductDto>();
-            foreach (var product in data)
+            var data = await _unitOfWork.Product.GetQueryable().Include(e => e.ProductCategories).Select(e => new ProductV1Dto
             {
-                var res = new ProductDto
+                DaysTillExpiration = e.DaysTillExpiration,
+                Id = e.Id,
+                Name = e.Name,
+                Price = e.Price,
+                ProdCode = e.ProdCode,
+                ProductCategoriesDto = e.ProductCategories.Select(e => new ProductCategoryDto
                 {
-                    DaysTillExpiration = product.DaysTillExpiration,
-                    Id = product.Id,
-                    Name = product.Name,
-                    Price = product.Price,
-                    ProdCode = product.ProdCode,
-                };
-                result.Add(res);
-            }
-            return Ok(ApiResponse<IList<ProductDto>>.Success(result));
+                    Id = e.Id,
+                    Name = e.Name
+                }).ToList()
+            }).ToListAsync();
+
+            
+            return Ok(ApiResponse<IList<ProductV1Dto>>.Success(data));
         }
 
         [HttpGet("GetAllProductsWithCateg")]
@@ -123,6 +126,23 @@ namespace POSIMSWebApi.Controllers
             }
 
             return Ok(ApiResponse<CreateProductDto>.Success(data));
+        }
+        [HttpGet("GetProductsForDropDown")]
+        public async Task<ActionResult<ApiResponse<PaginatedResult<GetProductDropDownTableDto>>>> GetProductDropDownTable([FromQuery]GenericSearchParams? input)
+        {
+            var data = await _unitOfWork.Product.GetQueryable()
+                .WhereIf(!string.IsNullOrWhiteSpace(input.FilterText), e => false || e.Name.Contains(input.FilterText))
+                .ToPaginatedResult(input.PageNumber, input.PageSize)
+                .OrderBy(e => e.Name).Select(e => new GetProductDropDownTableDto
+            {
+                Id = e.Id,
+                Name = e.Name,
+            }).ToListAsync();
+
+            var result = new PaginatedResult<GetProductDropDownTableDto>(data, data.Count, (int)input.PageNumber, (int)input.PageSize);
+
+
+            return Ok(ApiResponse<PaginatedResult<GetProductDropDownTableDto>>.Success(result));
         }
     }
 }

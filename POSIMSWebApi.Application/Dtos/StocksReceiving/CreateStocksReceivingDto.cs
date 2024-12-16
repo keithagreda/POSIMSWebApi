@@ -18,9 +18,4 @@ namespace POSIMSWebApi.Application.Dtos.StocksReceiving
         [Required]
         public int StorageLocationId { get; set; }
     }
-
-    public class GetAllStocksReceivingDto
-    {
-
-    }
 }

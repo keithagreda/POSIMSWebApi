@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Domain.ApiResponse;
+using Domain.Entities;
 using Domain.Error;
 using Domain.Interfaces;
 using LanguageExt.Common;
@@ -26,7 +27,7 @@ namespace POSIMSWebApi.Application.Services
             _stockDetailService = stockDetailService;
         }
 
-        public async Task<Result<string>> ReceiveStocks(CreateStocksReceivingDto input)
+        public async Task<ApiResponse<string>> ReceiveStocks(CreateStocksReceivingDto input)
         {
             //have to create stocks first
             var createStocks = new CreateStocks
@@ -40,40 +41,60 @@ namespace POSIMSWebApi.Application.Services
             //get stocks header id for receiving
             var stocksHeaderIdResult = await _stockDetailService.AutoCreateStocks(createStocks, transNum);
 
+            if (!stocksHeaderIdResult.IsSuccess)
+            {
+                return ApiResponse<string>.Fail("Something went wrong while creating stocks");
+            }
+
+            var currentlyOpenedInv = await _unitOfWork.InventoryBeginning.CreateOrGetInventoryBeginning();
+
+            // Step 5: Prepare the StocksReceiving entity
+            var stocksReceiving = new StocksReceiving
+            {
+                StocksHeaderId = stocksHeaderIdResult.Data,
+                TransNum = transNum,
+                Quantity = input.Quantity,
+                InventoryBeginningId = currentlyOpenedInv
+            };
+
+            // Step 6: Save to the database
+            await _unitOfWork.StocksReceiving.AddAsync(stocksReceiving);
+            return ApiResponse<string>.Success("", "Successfully received stocks!");
+
             // Handle potential error in stocksHeaderIdResult
-            return await stocksHeaderIdResult.Match(
-                async stocksHeaderId =>
-                {
-                    // Step 4: Get currently opened inventory for tagging
-                    var currentlyOpenedInv = await _unitOfWork.InventoryBeginning.CreateOrGetInventoryBeginning();
+            //return await stocksHeaderIdResult.Match(
+            //    async stocksHeaderId =>
+            //    {
+            //        // Step 4: Get currently opened inventory for tagging
+            //        var currentlyOpenedInv = await _unitOfWork.InventoryBeginning.CreateOrGetInventoryBeginning();
 
-                    // Step 5: Prepare the StocksReceiving entity
-                    var stocksReceiving = new StocksReceiving
-                    {
-                        StocksHeaderId = stocksHeaderId,
-                        TransNum = transNum,
-                        Quantity = input.Quantity,
-                        InventoryBeginningId = currentlyOpenedInv
-                    };
+            //        // Step 5: Prepare the StocksReceiving entity
+            //        var stocksReceiving = new StocksReceiving
+            //        {
+            //            StocksHeaderId = stocksHeaderId,
+            //            TransNum = transNum,
+            //            Quantity = input.Quantity,
+            //            InventoryBeginningId = currentlyOpenedInv
+            //        };
 
-                    // Step 6: Save to the database
-                    await _unitOfWork.StocksReceiving.AddAsync(stocksReceiving);
-                    return new Result<string>("Success!");
-                },
-                error =>
-                {
-                    // Handle the fault case
-                    return Task.FromResult(new Result<string>(error));
-                }
-            );
+            //        // Step 6: Save to the database
+            //        await _unitOfWork.StocksReceiving.AddAsync(stocksReceiving);
+            //        return new Result<string>("Success!");
+            //    },
+            //    error =>
+            //    {
+            //        // Handle the fault case
+            //        return Task.FromResult(new Result<string>(error));
+            //    }
+            //);
         }
 
 
         private string TransNumGenerator(int productId, int storageId)
         {
             var dateNow = DateTime.Now.Date;
-            var prodCode =  _unitOfWork.Product.GetQueryable().Where(e => e.Id == productId && e.CreationTime.Date == dateNow).Select(e => e.ProdCode ).FirstOrDefault();
-            var stockReceiving = _unitOfWork.StocksReceiving.GetQueryable();
+            var prodCode =  _unitOfWork.Product.GetQueryable().Where(e => e.Id == productId).Select(e => e.ProdCode ).FirstOrDefault();
+            var stockReceiving = _unitOfWork.StocksReceiving.GetQueryable().Where(e => e.CreationTime.Date == dateNow);
             var currentTransCount = stockReceiving.Count() + 1;
             string datePart = DateTime.Now.ToString("yyMMdd");
             return $"{prodCode}-{datePart}-{currentTransCount}-{storageId}";

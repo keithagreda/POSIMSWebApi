@@ -12,4 +12,10 @@ namespace POSIMSWebApi.Application.Dtos.StorageLocation
         public string Name { get; set; }
         public string Description { get; set; }
     }
+
+    public class GetStorageLocationForDropDownDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; }
+    }
 }

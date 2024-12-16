@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Domain.ApiResponse;
+using Domain.Entities;
 using Domain.Error;
 using Domain.Interfaces;
 using LanguageExt.Common;
@@ -15,6 +16,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace POSIMSWebApi.Application.Services
 {
@@ -31,7 +33,7 @@ namespace POSIMSWebApi.Application.Services
         /// </summary>
         /// <param name="input"></param>
         /// <returns></returns>
-        public async Task<Result<string>> CreateSalesFromTransNum(CreateOrEditSalesDto input)
+        public async Task<ApiResponse<string>> CreateSalesFromTransNum(CreateOrEditSalesDto input)
         {
             try
             {
@@ -61,7 +63,7 @@ namespace POSIMSWebApi.Application.Services
                 if (productStockDetails.Count <= 0)
                 {
                     var error = new ArgumentNullException(nameof(input.CreateSalesDetailDtos));
-                    return new Result<string>(error);
+                    return ApiResponse<string>.Fail(error.ToString());
                 }
 
                 var product = await _unitOfWork.Product.GetQueryable().Where(e => transDetails.Select(e => e.ProductId).Contains(e.Id)).Select(e => new CreateProductSales
@@ -74,7 +76,7 @@ namespace POSIMSWebApi.Application.Services
                 if (product.Count <= 0)
                 {
                     var error = new ValidationException("Error! Product not found!");
-                    return new Result<string>(error);
+                    return ApiResponse<string>.Fail(error.ToString());
                 }
 
                 var salesHeader = new SalesHeader()
@@ -91,7 +93,7 @@ namespace POSIMSWebApi.Application.Services
                     if (customer is null)
                     {
                         var error = new ValidationException("Error! Customer not found.");
-                        return new Result<string>(error);
+                        return ApiResponse<string>.Fail(error.ToString());
                     }
 
                     salesHeader.CustomerId = customer.Id;
@@ -117,7 +119,8 @@ namespace POSIMSWebApi.Application.Services
                         }).FirstOrDefaultAsync();
                     if (res is null)
                     {
-                        return new Result<string>(new ArgumentNullException("Error! A Product can't be found..."));
+                        var error = new ArgumentNullException("Error! A Product can't be found...");
+                        return ApiResponse<string>.Fail(error.ToString());
                     }
                     resGetStocks.Add(res);
                     //to create stock details
@@ -145,12 +148,12 @@ namespace POSIMSWebApi.Application.Services
                 await _unitOfWork.SalesHeader.AddAsync(salesHeader);
                 await _unitOfWork.SalesDetail.AddRangeAsync(saleDetails);
                 _unitOfWork.Complete();
-                return new Result<string>("Success!");
+
+                return ApiResponse<string>.Success("Success!");
             }
             catch (Exception ex)
             {
-
-                return new Result<string>(ex.Message);
+                return ApiResponse<string>.Fail(ex.Message);
             }
         }
 

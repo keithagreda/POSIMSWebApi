@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces;
+﻿using Domain.ApiResponse;
+using Domain.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using POSIMSWebApi.Application.Dtos.Sales;
@@ -20,16 +21,23 @@ namespace POSIMSWebApi.Controllers
         }
 
         [HttpPost("CreateSalesFromTransNum")]
-        public async Task<IActionResult> CreateSalesFromTransNum(CreateOrEditSalesDto input)
+        public async Task<ActionResult<ApiResponse<string>>> CreateSalesFromTransNum(CreateOrEditSalesDto input)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-            var result = await _salesService.CreateSalesFromTransNum(input);
-            _unitOfWork.Complete();
+            try
+            {
+                if (!ModelState.IsValid)
+                    return BadRequest(ModelState);
+                var result = await _salesService.CreateSalesFromTransNum(input);
+                _unitOfWork.Complete();
 
-            return result.Match<IActionResult>(
-           success => CreatedAtAction(nameof(CreateSalesFromTransNum), new { id = input}, success),
-           error => BadRequest(error));
+                return result;
+            }
+            catch (Exception ex)
+            {
+
+                return BadRequest(ex.Message);
+            }
+            
         }
 
         [HttpPost("CreateSales")]

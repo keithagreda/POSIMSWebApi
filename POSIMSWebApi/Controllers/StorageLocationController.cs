@@ -1,8 +1,10 @@
-﻿using Domain.Error;
+﻿using Domain.ApiResponse;
+using Domain.Error;
 using Domain.Interfaces;
 using LanguageExt;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using POSIMSWebApi.Application.Dtos.StorageLocation;
 using POSIMSWebApi.Application.Interfaces;
 
@@ -31,10 +33,17 @@ namespace POSIMSWebApi.Controllers
                 error => BadRequest(error));
         }
         [HttpGet("GetAllStorageLocation")]
-        public async Task<IActionResult> GetAllStorageLocation()
+        public async Task<ActionResult<ApiResponse<List<GetStorageLocationForDropDownDto>>>> GetAllStorageLocation()
         {
-            var result = await _unitOfWork.StorageLocation.GetAllAsync();
-            return Ok(result);
+            var result = await _unitOfWork.StorageLocation.GetQueryable()
+                .OrderBy(e => e.Name)
+                .Select(e => new GetStorageLocationForDropDownDto
+                {
+                    Id = e.Id,
+                    Name = e.Name,
+                }).ToListAsync();
+
+            return Ok(ApiResponse<List<GetStorageLocationForDropDownDto>>.Success(result));
         }
     }
 }
