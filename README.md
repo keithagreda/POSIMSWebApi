@@ -6,4 +6,4 @@ Stock Generation Number of Hours (Related with stocks receiving)
 Need to record how long does a batch is getting sold out
 Create Sales without trans num and storage location
 Create notification when discount is more than 30%
-Make inventory functional
+Make closing inventory logic
