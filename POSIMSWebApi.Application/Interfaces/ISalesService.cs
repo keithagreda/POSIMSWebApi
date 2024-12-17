@@ -7,7 +7,7 @@ namespace POSIMSWebApi.Application.Interfaces
     public interface ISalesService
     {
         Task<ApiResponse<string>> CreateSalesFromTransNum(CreateOrEditSalesDto input);
-        Task<Result<string>> CreateSales(CreateOrEditSalesDto input);
+        Task<ApiResponse<string>> CreateSales(CreateOrEditSalesV1Dto input);
 
     }
 }

@@ -4,7 +4,7 @@ namespace POSIMSWebApi.Application.Interfaces
 {
     public interface IInventoryService
     {
-        Task<CurrentInventoryDto> GetCurrentStocks();
+        Task<List<CurrentInventoryDto>> GetCurrentStocks();
         Task<string> BeginningEntry(CreateBeginningEntryDto input);
     }
 }

@@ -2,9 +2,12 @@
 using Domain.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using POSIMSWebApi.Application.Dtos.Pagination;
 using POSIMSWebApi.Application.Dtos.Sales;
 using POSIMSWebApi.Application.Interfaces;
 using POSIMSWebApi.Application.Services;
+using POSIMSWebApi.QueryExtensions;
 
 namespace POSIMSWebApi.Controllers
 {
@@ -18,6 +21,37 @@ namespace POSIMSWebApi.Controllers
         {
             _salesService = salesService;
             _unitOfWork = unitOfWork;
+        }
+        [HttpGet("GetSales")]
+        public async Task<ActionResult<ApiResponse<PaginatedResult<SalesHeaderDto>>>> GetSales([FromQuery]FilterSales input)
+        {
+            //dapat naay created by
+            var data = await _unitOfWork.SalesHeader.GetQueryable().Include(e => e.SalesDetails)
+                .ThenInclude(e => e.ProductFk)
+                .Include(e => e.CustomerFk)
+                .ToPaginatedResult(input.PageNumber, input.PageSize)
+                .OrderByDescending(e => e.CreationTime)
+                .Select(e => new SalesHeaderDto
+                {
+                    Id = e.Id,
+                    TotalAmount = e.TotalAmount,
+                    TransactionDate = e.CreationTime.ToString("f"),
+                    TransNum = e.TransNum,
+                    SoldBy = "",
+                    CustomerName = e.CustomerFk != null ? string.Format("{0} {1}", e.CustomerFk.Firstname, e.CustomerFk.Lastname) : "N/A",
+                    SalesDetailsDto = e.SalesDetails.Select(e => new SalesDetailDto
+                    {
+                        ActualSellingPrice = e.ActualSellingPrice,
+                        Amount = e.Amount,
+                        Discount = e.Discount,
+                        ProductName = e.ProductFk.Name,
+                    }).ToList()
+                }).ToListAsync();
+
+            var result = new PaginatedResult<SalesHeaderDto>(data, data.Count, (int)input.PageNumber, (int)input.PageSize);
+
+            return ApiResponse<PaginatedResult<SalesHeaderDto>>.Success(result);
+                
         }
 
         [HttpPost("CreateSalesFromTransNum")]
@@ -41,16 +75,13 @@ namespace POSIMSWebApi.Controllers
         }
 
         [HttpPost("CreateSales")]
-        public async Task<IActionResult> CreateSales(CreateOrEditSalesDto input)
+        public async Task<ActionResult<ApiResponse<string>>> CreateSales(CreateOrEditSalesV1Dto input)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
             var result = await _salesService.CreateSales(input);
             _unitOfWork.Complete();
-
-            return result.Match<IActionResult>(
-           success => CreatedAtAction(nameof(CreateSales), new { id = input.CreateSalesDetailDtos }, success),
-           error => BadRequest(error));
+            return result;
         }
     }
 }

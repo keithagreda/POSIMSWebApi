@@ -157,8 +157,116 @@ namespace POSIMSWebApi.Application.Services
             }
         }
 
-        public async Task<Result<string>> CreateSales(CreateOrEditSalesDto input)
+        /// <summary>
+        /// for manual encoding
+        ///  doesnt transact with stock details
+        ///  doesnt utilize storage location since the storage is already in place for FIFO system
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns>string</returns>
+        public async Task<ApiResponse<string>> CreateSales(CreateOrEditSalesV1Dto input)
         {
+            try
+            {
+                //access product stock details
+                var stocksReceiving = _unitOfWork.StocksReceiving.GetQueryable()
+                    .Include(e => e.StocksHeaderFk);
+
+                var transDetails = input.CreateSalesDetailV1Dto.ToList();
+
+                //Validation for product details
+                if (transDetails.Count <= 0)
+                {
+                    var error = new ArgumentNullException("Products can't be null",nameof(input.CreateSalesDetailV1Dto));
+                    return ApiResponse<string>.Fail(error.ToString());
+                }
+
+                //need to update this from previous sales creation
+
+                //var product = await _unitOfWork.Product.GetQueryable().Where(e => transDetails.Select(e => e.ProductId).Contains(e.Id))
+                //    .Select(e => new CreateProductSales
+                //{
+                //    Id = e.Id,
+                //    Name = e.Name,
+                //    Price = e.Price
+                //}).ToListAsync();
+
+                var transJoin = (from t in transDetails
+                                 join p in _unitOfWork.Product.GetQueryable()
+                                 on t.ProductId equals p.Id into prodTrans
+                                 from pt in prodTrans.DefaultIfEmpty()
+                                 select new CreateProductSales
+                                 {
+                                     Id = pt.Id,
+                                     ActualSellingPrice = t.ActualSellingPrice,
+                                     Name = pt.Name,
+                                     Price = pt.Price,
+                                     Quantity = t.Quantity,
+                                 }).ToList();
+
+
+                if (transJoin.Count <= 0)
+                {
+                    var error = new ValidationException("Error! Product not found!");
+                    return ApiResponse<string>.Fail(error.ToString());
+                }
+
+                var salesHeader = new SalesHeader()
+                {
+                    Id = Guid.NewGuid(),
+                    TotalAmount = 0,
+                    TransNum = await GenerateTransNum()
+                };
+
+                if (input.CustomerId is not null)
+                {
+                    var customer = await _unitOfWork.Customer.FirstOrDefaultAsync(e => e.Id == input.CustomerId);
+
+                    if (customer is null)
+                    {
+                        var error = new ValidationException("Error! Customer not found.");
+                        return ApiResponse<string>.Fail(error.ToString());
+                    }
+
+                    salesHeader.CustomerId = customer.Id;
+                }
+
+                var saleDetails = new List<SalesDetail>();
+                //TO DO FIGURE OUT HOW TO DEDUCT QTY IF STOCKS ARE NOT ENOUGH
+                foreach (var item in transJoin)
+                {
+                    //to deduct items from stocks
+                    //since its first in first out 
+                    //to create stock details
+
+                    var currAmount = CalculateAmount(transJoin, item.Id, item.Quantity);
+                    var saleDetail = new SalesDetail
+                    {
+                        Id = Guid.NewGuid(),
+                        ActualSellingPrice = item.ActualSellingPrice != 0 ? item.ActualSellingPrice : 0, //
+                        Amount = currAmount,
+                        Quantity = item.Quantity,
+                        ProductPrice = item.Price,
+                        ProductId = item.Id,
+                        Discount = item.ActualSellingPrice != 0 ? (currAmount - item.ActualSellingPrice) / currAmount * 100 : 0, // 
+                        SalesHeaderId = salesHeader.Id
+                    };
+                    salesHeader.TotalAmount = salesHeader.TotalAmount += currAmount;
+                    saleDetails.Add(saleDetail);
+                }
+
+                //make a notification when discount is more than 30%
+
+                await _unitOfWork.SalesHeader.AddAsync(salesHeader);
+                await _unitOfWork.SalesDetail.AddRangeAsync(saleDetails);
+                _unitOfWork.Complete();
+
+                return ApiResponse<string>.Success("Success!");
+            }
+            catch (Exception ex)
+            {
+                return ApiResponse<string>.Fail(ex.Message);
+            }
             //if (input.SalesHeaderId is null)
             //{
             //    var error = new ValidationException("Error! SalesHeaderId Can't be null.");
@@ -227,7 +335,7 @@ namespace POSIMSWebApi.Application.Services
             //await _unitOfWork.SalesHeader.AddAsync(salesHeader);
             //await _unitOfWork.SalesDetail.AddRangeAsync(salesDetails);
             //_unitOfWork.Complete();
-            return new Result<string>("Success!");
+            //return new Result<string>("Success!");
         }
 
         private async Task<string> GenerateTransNum()

@@ -14,7 +14,7 @@ namespace POSIMSWebApi.Application.Services
             _unitOfWork = unitOfWork;
         }
 
-        public async Task<CurrentInventoryDto> GetCurrentStocks()
+        public async Task<List<CurrentInventoryDto>> GetCurrentStocks()
         {
 
             // Current Inventory
@@ -61,7 +61,7 @@ namespace POSIMSWebApi.Application.Services
                     TotalQuantity = g.Sum(e => e.Quantity)
                 });
 
-            var join = from currInv in getCurrentInventory
+            var join = (from currInv in getCurrentInventory
                        join recv in receivedStocks on currInv.ProductId equals recv.ProductId into recvGroup
                        from recv in recvGroup.DefaultIfEmpty()
                        join sales in salesDetails on currInv.ProductId equals sales.ProductId into salesGroup
@@ -72,11 +72,10 @@ namespace POSIMSWebApi.Application.Services
                            ReceivedQty = recv != null ? recv.TotalQuantity : 0,
                            SalesQty = sales != null ? sales.TotalQuantity : 0,
                            CurrentStocks = (currInv != null ? currInv.TotalQuantity : 0) + (recv != null ? recv.TotalQuantity : 0) - (sales != null ? sales.TotalQuantity : 0)
-                       };
+                       }).ToList();
 
-            var result = join.FirstOrDefault();
-            if (result is null) throw new ArgumentNullException("Error! Current Stocks can't be generated", nameof(result));
-            return result!;
+            if (join.Count <= 0) throw new ArgumentNullException("Error! Current Stocks can't be generated", nameof(join));
+            return join;
         }
 
         /// <summary>
