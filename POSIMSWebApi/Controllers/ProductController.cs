@@ -137,6 +137,8 @@ namespace POSIMSWebApi.Controllers
             {
                 Id = e.Id,
                 Name = e.Name,
+                Price = e.Price
+
             }).ToListAsync();
 
             var result = new PaginatedResult<GetProductDropDownTableDto>(data, data.Count, (int)input.PageNumber, (int)input.PageSize);
