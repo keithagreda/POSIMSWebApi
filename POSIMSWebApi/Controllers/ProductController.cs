@@ -130,7 +130,8 @@ namespace POSIMSWebApi.Controllers
         [HttpGet("GetProductsForDropDown")]
         public async Task<ActionResult<ApiResponse<PaginatedResult<GetProductDropDownTableDto>>>> GetProductDropDownTable([FromQuery]GenericSearchParams? input)
         {
-            var data = await _unitOfWork.Product.GetQueryable()
+            var query = _unitOfWork.Product.GetQueryable();
+            var data = await query
                 .WhereIf(!string.IsNullOrWhiteSpace(input.FilterText), e => false || e.Name.Contains(input.FilterText))
                 .ToPaginatedResult(input.PageNumber, input.PageSize)
                 .OrderBy(e => e.Name).Select(e => new GetProductDropDownTableDto
@@ -141,7 +142,9 @@ namespace POSIMSWebApi.Controllers
 
             }).ToListAsync();
 
-            var result = new PaginatedResult<GetProductDropDownTableDto>(data, data.Count, (int)input.PageNumber, (int)input.PageSize);
+            var totalCount = await query.CountAsync();
+
+            var result = new PaginatedResult<GetProductDropDownTableDto>(data, totalCount, (int)input.PageNumber, (int)input.PageSize);
 
 
             return Ok(ApiResponse<PaginatedResult<GetProductDropDownTableDto>>.Success(result));
