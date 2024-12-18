@@ -10,6 +10,7 @@ namespace POSIMSWebApi.Application.Dtos.Sales
         public decimal ProductPrice { get; set; }
         public decimal ActualSellingPrice { get; set; }
         public decimal Discount { get; set; }
+        public string ProductName { get; set; }
     }
 
 }
