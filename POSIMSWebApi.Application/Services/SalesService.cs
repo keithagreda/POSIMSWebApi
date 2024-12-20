@@ -198,7 +198,7 @@ namespace POSIMSWebApi.Application.Services
                                  select new CreateProductSales
                                  {
                                      Id = pt.Id,
-                                     ActualSellingPrice = t.ActualSellingPrice,
+                                     ActualSellingPrice = t.ActualSellingPrice != null ? (decimal)t.ActualSellingPrice : 0,
                                      Name = pt.Name,
                                      Price = pt.Price,
                                      Quantity = t.Quantity,

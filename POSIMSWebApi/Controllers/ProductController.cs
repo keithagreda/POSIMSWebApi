@@ -10,8 +10,10 @@ using POSIMSWebApi.Application.Dtos;
 using POSIMSWebApi.Application.Dtos.Pagination;
 using POSIMSWebApi.Application.Dtos.ProductCategory;
 using POSIMSWebApi.Application.Dtos.ProductDtos;
+using POSIMSWebApi.Application.Dtos.Sales;
 using POSIMSWebApi.Application.Interfaces;
 using POSIMSWebApi.QueryExtensions;
+using System.Linq;
 
 namespace POSIMSWebApi.Controllers
 {
@@ -148,6 +150,40 @@ namespace POSIMSWebApi.Controllers
 
 
             return Ok(ApiResponse<PaginatedResult<GetProductDropDownTableDto>>.Success(result));
+        }
+
+        [HttpPost("GetProductDetailsForCart")]
+        public async Task<ActionResult<ApiResponse<CreateOrEditSalesV1Dto>>> GetProductDetailsForCart(CreateOrEditSalesV1Dto input)
+        {
+            var query = _unitOfWork.Product.GetQueryable();
+            var inputListOfProducts = input.CreateSalesDetailV1Dto.ToList();
+            var productDetails =await query.Where(e => inputListOfProducts.Select(e => e.ProductId).Contains(e.Id)).Select(e => new
+            {
+                ProductId = e.Id,
+                ProductPrice = e.Price
+            }).ToListAsync();
+
+            var leftJoin =  (from n in inputListOfProducts
+                                  join p in productDetails
+                                  on n.ProductId equals p.ProductId
+                                  into pGroup from p in pGroup.DefaultIfEmpty() 
+                                  select new CreateSalesDetailV1Dto
+                                  {
+                                      
+                                      ProductId = p.ProductId,
+                                      Quantity = n.Quantity,
+                                      ProductPrice = p.ProductPrice * n.Quantity,
+                                  }).ToList();
+
+            var result = new CreateOrEditSalesV1Dto
+            {
+                CustomerId = input.CustomerId,
+                SalesHeaderId = null,
+                CreateSalesDetailV1Dto = leftJoin
+            };
+
+            return Ok(ApiResponse<CreateOrEditSalesV1Dto>.Success(result));
+                            
         }
     }
 }
