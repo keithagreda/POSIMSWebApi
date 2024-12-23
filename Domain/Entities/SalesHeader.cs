@@ -15,5 +15,9 @@ namespace Domain.Entities
         public Remarks RemarksFk { get; set; }
         public ICollection<SalesDetail> SalesDetails { get; set; }
 
+        public Guid? InventoryBeginningId { get; set; }
+        [ForeignKey("InventoryBeginningId")]
+        public InventoryBeginning InventoryBeginningFk { get; set; }
+
     }
 }

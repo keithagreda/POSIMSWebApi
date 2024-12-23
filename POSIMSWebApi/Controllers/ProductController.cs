@@ -153,10 +153,10 @@ namespace POSIMSWebApi.Controllers
         }
 
         [HttpPost("GetProductDetailsForCart")]
-        public async Task<ActionResult<ApiResponse<CreateOrEditSalesV1Dto>>> GetProductDetailsForCart(CreateOrEditSalesV1Dto input)
+        public async Task<ActionResult<ApiResponse<List<CreateSalesDetailV1Dto>>>> GetProductDetailsForCart(List<CreateSalesDetailV1Dto> input)
         {
             var query = _unitOfWork.Product.GetQueryable();
-            var inputListOfProducts = input.CreateSalesDetailV1Dto.ToList();
+            var inputListOfProducts = input.ToList();
             var productDetails =await query.Where(e => inputListOfProducts.Select(e => e.ProductId).Contains(e.Id)).Select(e => new
             {
                 ProductId = e.Id,
@@ -175,14 +175,8 @@ namespace POSIMSWebApi.Controllers
                                       ProductPrice = p.ProductPrice * n.Quantity,
                                   }).ToList();
 
-            var result = new CreateOrEditSalesV1Dto
-            {
-                CustomerId = input.CustomerId,
-                SalesHeaderId = null,
-                CreateSalesDetailV1Dto = leftJoin
-            };
 
-            return Ok(ApiResponse<CreateOrEditSalesV1Dto>.Success(result));
+            return Ok(ApiResponse<List<CreateSalesDetailV1Dto>>.Success(leftJoin));
                             
         }
     }

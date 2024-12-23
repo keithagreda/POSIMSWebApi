@@ -215,7 +215,8 @@ namespace POSIMSWebApi.Application.Services
                 {
                     Id = Guid.NewGuid(),
                     TotalAmount = 0,
-                    TransNum = await GenerateTransNum()
+                    TransNum = await GenerateTransNum(),
+                    InventoryBeginningId = await _unitOfWork.InventoryBeginning.CreateOrGetInventoryBeginning()
                 };
 
                 if (input.CustomerId is not null)

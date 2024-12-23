@@ -1,4 +1,5 @@
-﻿using Domain.Entities;
+﻿using Domain.ApiResponse;
+using Domain.Entities;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using POSIMSWebApi.Application.Dtos.Inventory;
@@ -13,6 +14,8 @@ namespace POSIMSWebApi.Application.Services
         {
             _unitOfWork = unitOfWork;
         }
+
+       
 
         public async Task<List<CurrentInventoryDto>> GetCurrentStocks()
         {
@@ -105,5 +108,7 @@ namespace POSIMSWebApi.Application.Services
             _unitOfWork.Complete();
             return "Success!";
         }
+
+        
     }
 }

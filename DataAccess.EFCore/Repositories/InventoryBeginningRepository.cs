@@ -1,4 +1,6 @@
-﻿using Domain.Entities;
+﻿using DataAccess.EFCore.UnitOfWorks;
+using Domain.ApiResponse;
+using Domain.Entities;
 using Domain.Enums;
 using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
@@ -29,16 +31,26 @@ namespace DataAccess.EFCore.Repositories
             return newInventory.Id;
         }
 
-        public async Task CloseInventory()
+        public async Task<ApiResponse<string>> CloseInventory()
         {
-            var openInventory = await _context.InventoryBeginnings.FirstOrDefaultAsync(e => e.Status == InventoryStatus.Open);
-            if(openInventory is null)
-            {
-                throw new Exception("Invalid Action! Can't find an open inventory.");
-            }
+            var getCurrentOpenedInventory = await _context.InventoryBeginnings.FirstOrDefaultAsync(e => e.Status == InventoryStatus.Open);
+            if (getCurrentOpenedInventory is null) return ApiResponse<string>.Fail("Error! Inventory can't be closed because there are no open records.");
+            var currentOpenedInvDate = getCurrentOpenedInventory.CreationTime.DateTime;
+            var currentOpenedInvId = getCurrentOpenedInventory.Id;
 
-            var stocksReceived = _context.StocksReceivings.AsQueryable();
-            //var sales
+            var received = await _context.StocksReceivings.Include(e => e.StocksHeaderFk).Where(e => e.InventoryBeginningId == currentOpenedInvId).GroupBy(e => new
+            {
+                e.StocksHeaderFk.ProductId
+            }).Select(e => new
+            {
+                ProductId = e.Key.ProductId,
+                TotalQuantity = e.Sum(e => e.Quantity)
+            }).ToListAsync();
+
+            var sales = await _context.SalesHeaders.Include(e => e.SalesDetails).Include(e => e.InventoryBeginningFk)
+                .Where(e => e.InventoryBeginningFk.Status == InventoryStatus.Open).GroupBy(e => e.SalesDetails)
+
+            //get sales and receiving
         }
     }
 }
