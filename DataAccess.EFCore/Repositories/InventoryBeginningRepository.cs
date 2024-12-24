@@ -40,16 +40,11 @@ namespace DataAccess.EFCore.Repositories
 
                 if (getCurrentOpenedInventory is null)
                     return ApiResponse<string>.Fail("Error! Inventory can't be closed because there are no open records.");
-
-                var currentOpenedInvDate = getCurrentOpenedInventory.CreationTime;
-                var currentDateTime = DateTimeOffset.UtcNow;
                 var currentOpenedInvId = getCurrentOpenedInventory.Id;
 
                 var received = await _context.StocksReceivings
                     .Include(e => e.StocksHeaderFk)
-                    .Where(e => e.InventoryBeginningId == currentOpenedInvId &&
-                                e.CreationTime >= currentOpenedInvDate && 
-                                e.CreationTime <= currentDateTime)
+                    .Where(e => e.InventoryBeginningId == currentOpenedInvId)
                     .GroupBy(e => new
                     {
                         e.StocksHeaderFk.ProductId
@@ -64,10 +59,8 @@ namespace DataAccess.EFCore.Repositories
                 //var sales = await _context.SalesHeaders.Include(e => e.SalesDetails).Include(e => e.InventoryBeginningFk)
                 //    .Where(e => e.InventoryBeginningFk.Status == InventoryStatus.Open).GroupBy(e => e.SalesDetails)
 
-                var salesDetails = await _context.SalesDetails.Include(e => e.SalesHeaderFk.InventoryBeginningFk)
-                    .Where(e => e.SalesHeaderFk.InventoryBeginningFk.Status == InventoryStatus.Open
-                    && e.CreationTime >= currentOpenedInvDate
-                    && e.CreationTime <= currentDateTime
+                var salesDetails = await _context.SalesDetails.Include(e => e.SalesHeaderFk)
+                    .Where(e => e.SalesHeaderFk.InventoryBeginningId == currentOpenedInvId
                     )
                     .GroupBy(e => e.ProductId)
                     .Select(e => new
@@ -77,9 +70,8 @@ namespace DataAccess.EFCore.Repositories
                     }).ToListAsync();
 
                 //get inventory beginning details
-                var inventoryDetails = await _context.InventoryBeginningDetails.Include(e => e.InventoryBeginningFk)
-                    .Where(e => e.InventoryBeginningFk.Status == InventoryStatus.Open
-                    && e.CreationTime >= currentOpenedInvDate && e.CreationTime <= currentDateTime).Select(e => new
+                var inventoryDetails = await _context.InventoryBeginningDetails
+                    .Where(e => e.InventoryBeginningId == currentOpenedInvId).Select(e => new
                     {
                         ProductId = e.ProductId,
                         Quantity = e.Qty
@@ -93,6 +85,7 @@ namespace DataAccess.EFCore.Repositories
                 {
                     Id = Guid.NewGuid(),
                     Status = 0,
+                    CreationTime = DateTime.UtcNow,
                 };
 
                 //join 3 tables
@@ -106,7 +99,8 @@ namespace DataAccess.EFCore.Repositories
 
                                 ProductId = i.ProductId,
                                 Qty = (i.Quantity + r.TotalQuantity) - s.TotalQuantity,
-                                InventoryBeginningId = newInventory.Id
+                                InventoryBeginningId = newInventory.Id,
+                                CreationTime = DateTime.UtcNow,
                             }).ToList();
 
 

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using POSIMSWebApi.Application.Dtos.Pagination;
+using POSIMSWebApi.Application.Dtos.ProductDtos;
 using POSIMSWebApi.Application.Dtos.Sales;
 using POSIMSWebApi.Application.Interfaces;
 using POSIMSWebApi.Application.Services;
@@ -84,6 +85,20 @@ namespace POSIMSWebApi.Controllers
             var result = await _salesService.CreateSales(input);
             _unitOfWork.Complete();
             return result;
+        }
+
+        [HttpGet("GetTotalSales")]
+        public async Task<ActionResult<ApiResponse<GetTotalSalesDto>>> GetTotalSales()
+        {
+            var result = await _salesService.GetTotalSales();
+            return Ok(result);
+        }
+
+        [HttpGet("GetTotalMonthlySales")]
+        public async Task<ActionResult<ApiResponse<List<PerMonthSalesDto>>>> GetPerMonthSales(int? year)
+        {
+            var result = await _salesService.GetPerMonthSales(year);
+            return Ok(result);
         }
     }
 }

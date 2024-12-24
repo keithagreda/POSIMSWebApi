@@ -372,5 +372,102 @@ namespace POSIMSWebApi.Application.Services
             decimal disPercentage = (discountAmount / asp) * 100;
             return disPercentage;
         }
+
+        public async Task<ApiResponse<GetTotalSalesDto>> GetTotalSales()
+        {
+
+            var inventory = _unitOfWork.InventoryBeginning.GetQueryable();
+            var getCurrentInv = await inventory.FirstOrDefaultAsync(e => e.Status == Domain.Enums.InventoryStatus.Open) ?? new InventoryBeginning();
+            var previousInventories = inventory.Where(e => e.Status == Domain.Enums.InventoryStatus.Closed).OrderByDescending(e => e.CreationTime);
+            var prevInv = await previousInventories.FirstOrDefaultAsync() ?? new InventoryBeginning();
+
+            var sales = _unitOfWork.SalesDetail.GetQueryable().Include(e => e.SalesHeaderFk.InventoryBeginningFk);
+            var currentSales = sales.Where(e => e.SalesHeaderFk.InventoryBeginningId == getCurrentInv.Id).Sum(e => (e.ProductPrice * e.Quantity) + e.ActualSellingPrice);
+            var prevInvSales = sales.Where(e => e.SalesHeaderFk.InventoryBeginningId == prevInv.Id).Sum(e => (e.ProductPrice * e.Quantity) + e.ActualSellingPrice);
+
+            // Fetch previous sales in memory
+            var prevSales = await sales
+                .OrderByDescending(e => e.SalesHeaderFk.InventoryBeginningFk.CreationTime)
+                .Take(5)
+                .GroupBy(e => e.SalesHeaderFk.InventoryBeginningId)
+                .Select(g => g.Sum(e => e.ActualSellingPrice != 0 ? e.ActualSellingPrice : e.Amount)) 
+                .ToListAsync(); 
+
+
+            // Use Zip on the in-memory result
+            var perInv = prevSales
+                .Zip(prevSales.Skip(1), (prev, curr) => new
+                {
+                    PrevSales = prev,
+                    CurrSales = curr,
+                    SalesPercentage = prev == 0 ? 0 : Convert.ToInt32(((curr - prev) / prev) * 100)
+                }).ToList();
+
+            if (currentSales <= 0)
+            {
+                return ApiResponse<GetTotalSalesDto>.Success(new GetTotalSalesDto
+                {
+                    SalesPercentage = 0,
+                    TotalSales = 0
+                });
+            };
+
+            var percentage = prevInvSales > 0 ? Convert.ToInt32((currentSales - prevInvSales) / prevInvSales * 100) : 0;
+
+            var result = new GetTotalSalesDto
+            {
+                TotalSales = Convert.ToInt32(currentSales),
+                SalesPercentage = percentage,
+                AllSalesPercentage = perInv.Select(e => e.SalesPercentage).ToArray()
+            };
+
+
+            return ApiResponse<GetTotalSalesDto>.Success(result);
+        }
+
+        public async Task<ApiResponse<List<PerMonthSalesDto>>> GetPerMonthSales(int? year )
+        {
+            if (year is null)
+            {
+                year = DateTime.Now.Year;
+            }
+
+            // Create a list of all months for the specified year
+            var allMonths = Enumerable.Range(1, 12)
+                .Select(month => new { Year = year.Value, Month = month })
+                .ToList(); // Materialize as List for iteration
+
+            // Fetch the sales queryable
+            var sales = _unitOfWork.SalesDetail.GetQueryable().Include(e => e.SalesHeaderFk);
+
+            // Precompute the total sales for the year
+            var totalSales = await sales
+                .Where(sale => sale.CreationTime.Year == year)
+                .SumAsync(sale => sale.ActualSellingPrice != 0 ? sale.ActualSellingPrice : sale.Amount); // Use SumAsync for EF Core async operations
+
+            // Join all months with sales data
+            var monthlySalesPercentage = allMonths
+                .Select(month => new
+                {
+                    month.Year,
+                    month.Month,
+                    MonthlyTotal = sales
+                        .Where(sale => sale.CreationTime.Year == month.Year && sale.CreationTime.Month == month.Month)
+                        .Sum(sale => sale.ActualSellingPrice != 0 ? sale.ActualSellingPrice : sale.Amount), // Aggregate monthly totals
+                    TotalSales = totalSales,
+                })
+                .OrderBy(e => e.Month)
+                .Select(result => new PerMonthSalesDto
+                {
+                    Month = new DateTime(1, result.Month, 1).ToString("MMMM"),
+                    Year = result.Year.ToString(),
+                    SalesPercentage = result.TotalSales == 0
+                        ? 0
+                        : (result.MonthlyTotal / result.TotalSales) * 100,
+                    TotalMonthlySales = result.MonthlyTotal
+                })
+                .ToList(); // Finalize as a List
+            return ApiResponse<List<PerMonthSalesDto>>.Success(monthlySalesPercentage);
+        }
     }
 }

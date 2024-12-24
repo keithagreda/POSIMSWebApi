@@ -160,7 +160,8 @@ namespace POSIMSWebApi.Controllers
             var productDetails =await query.Where(e => inputListOfProducts.Select(e => e.ProductId).Contains(e.Id)).Select(e => new
             {
                 ProductId = e.Id,
-                ProductPrice = e.Price
+                ProductPrice = e.Price,
+                Name = e.Name
             }).ToListAsync();
 
             var leftJoin =  (from n in inputListOfProducts
@@ -173,6 +174,7 @@ namespace POSIMSWebApi.Controllers
                                       ProductId = p.ProductId,
                                       Quantity = n.Quantity,
                                       ProductPrice = p.ProductPrice * n.Quantity,
+                                      ProductName = p.Name
                                   }).ToList();
 
 
