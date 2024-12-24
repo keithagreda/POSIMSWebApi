@@ -1,4 +1,5 @@
-﻿using Domain.Interfaces;
+﻿using Domain.ApiResponse;
+using Domain.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using POSIMSWebApi.Application.Dtos.Inventory;
@@ -38,6 +39,16 @@ namespace POSIMSWebApi.Controllers
 
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
+            return Ok(data);
+        }
+        [HttpPost("CloseInventory")]
+        public async Task<ActionResult<ApiResponse<string>>> CloseInventory()
+        {
+            var data = await _unitOfWork.InventoryBeginning.CloseInventory();
+            if(data is null)
+            {
+                return ApiResponse<string>.Fail("Failed");
+            }
             return Ok(data);
         }
     }

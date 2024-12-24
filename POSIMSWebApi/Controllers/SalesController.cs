@@ -45,6 +45,8 @@ namespace POSIMSWebApi.Controllers
                         Amount = e.Amount,
                         Discount = e.Discount,
                         ProductName = e.ProductFk.Name,
+                        Quantity = e.Quantity,
+                        ProductPrice = e.ProductPrice
                     }).ToList()
                 }).ToListAsync();
 

@@ -48,6 +48,8 @@ namespace POSIMSWebApi.Application.Services
             var receivedStocks = _unitOfWork.StocksReceiving.GetQueryable()
                 .Include(e => e.StocksHeaderFk)
                 .ThenInclude(e => e.ProductFK)
+                .Include(e => e.InventoryBeginningFk)
+                .Where(e => e.InventoryBeginningFk.Status == Domain.Enums.InventoryStatus.Open)
                 .GroupBy(e => e.StocksHeaderFk.ProductId)
                 .Select(group => new
                 {
@@ -57,6 +59,8 @@ namespace POSIMSWebApi.Application.Services
 
             // Sales Details
             var salesDetails = _unitOfWork.SalesDetail.GetQueryable()
+                .Include(e => e.SalesHeaderFk.InventoryBeginningFk)
+                .Where(e => e.SalesHeaderFk.InventoryBeginningFk.Status == Domain.Enums.InventoryStatus.Open)
                 .GroupBy(e => e.ProductId)
                 .Select(g => new
                 {
