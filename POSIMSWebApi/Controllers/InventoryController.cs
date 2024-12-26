@@ -19,7 +19,7 @@ namespace POSIMSWebApi.Controllers
             _unitOfWork = unitOfWork;
         }
         [HttpGet("GetCurrentStocks")]
-        public async Task<IActionResult> GetCurrentStocks()
+        public async Task<ActionResult<ApiResponse<List<CurrentInventoryDto>>>> GetCurrentStocks()
         {
             try
             {

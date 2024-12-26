@@ -22,4 +22,17 @@ namespace POSIMSWebApi.Application.Dtos.Stocks
         public int OverallStock { get; set; }
         public List<StocksDetail> StocksDetails { get; set; }
     }
+
+    public class GetStocksGenerationInput
+    {
+        public int NumberOfHours { get; set; }
+    }
+
+    public class GetStocksGenerationDto
+    {
+        public string ProductName { get; set; }
+        public decimal GeneratedQuantity { get; set; }
+        public decimal BaselineQuantity { get; set; }
+        public decimal DifferentialPercentage { get; set; }
+    }
 }

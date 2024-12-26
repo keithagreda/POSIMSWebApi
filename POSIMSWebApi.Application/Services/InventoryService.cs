@@ -4,6 +4,7 @@ using Domain.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using POSIMSWebApi.Application.Dtos.Inventory;
 using POSIMSWebApi.Application.Interfaces;
+using System.Collections.Generic;
 
 namespace POSIMSWebApi.Application.Services
 {
@@ -17,7 +18,7 @@ namespace POSIMSWebApi.Application.Services
 
        
 
-        public async Task<List<CurrentInventoryDto>> GetCurrentStocks()
+        public async Task<ApiResponse<List<CurrentInventoryDto>>> GetCurrentStocks()
         {
 
             // Current Inventory
@@ -81,8 +82,8 @@ namespace POSIMSWebApi.Application.Services
                            CurrentStocks = (currInv != null ? currInv.TotalQuantity : 0) + (recv != null ? recv.TotalQuantity : 0) - (sales != null ? sales.TotalQuantity : 0)
                        }).ToList();
 
-            if (join.Count <= 0) throw new ArgumentNullException("Error! Current Stocks can't be generated", nameof(join));
-            return join;
+            if (join.Count <= 0) ApiResponse<List<CurrentInventoryDto>>.Fail(new ArgumentNullException("Error! Current Stocks can't be generated", nameof(join)).ToString());
+            return ApiResponse<List<CurrentInventoryDto>>.Success(join);
         }
 
         /// <summary>

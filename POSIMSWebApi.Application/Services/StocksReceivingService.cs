@@ -99,6 +99,65 @@ namespace POSIMSWebApi.Application.Services
             string datePart = DateTime.Now.ToString("yyMMdd");
             return $"{prodCode}-{datePart}-{currentTransCount}-{storageId}";
         }
+
+        public async Task<ApiResponse<List<GetStocksGenerationDto>>> GetStocksGeneration(GetStocksGenerationInput input)
+        {
+            //var receiving = _unitOfWork.StocksReceiving.GetQueryable().Include(e => e.StocksHeaderFk.ProductFK).Where(e => e.CreationTime >= e.CreationTime
+            //    .AddHours(input.NumberOfHours))
+            //    .GroupBy(e => e.StocksHeaderFk.ProductFK.Name)
+            //    .Select(e => new GetStocksGenerationDto
+            //    {
+            //        ProductName = e.Key,
+            //        GeneratedQuantity = e.Sum(e => e.Quantity),
+            //        DifferentialPercentage
+            //    });
+
+            var receiving = _unitOfWork.StocksReceiving.GetQueryable()
+            .Include(e => e.StocksHeaderFk.ProductFK);
+
+            var current = await receiving
+                .Where(e => e.CreationTime >= DateTime.UtcNow.AddHours(-input.NumberOfHours))
+                .GroupBy(e => e.StocksHeaderFk.ProductFK.Name)
+                .Select(e => new
+                {
+                    ProductName = e.Key,
+                    GeneratedQuantity = e.Sum(x => x.Quantity),
+                }).ToListAsync();
+
+            var baseline = await receiving
+                .Where(e => e.CreationTime >= DateTime.UtcNow.AddHours(-input.NumberOfHours * 2)
+                            && e.CreationTime <= DateTime.UtcNow.AddHours(-input.NumberOfHours))
+                .GroupBy(e => e.StocksHeaderFk.ProductFK.Name)
+                .Select(e => new
+                {
+                    ProductName = e.Key,
+                    GeneratedQuantity = e.Sum(x => x.Quantity),
+                }).ToListAsync();
+
+            var differentialStockData = current
+                .SelectMany(currentItem => baseline
+                    .Where(baselineItem => baselineItem.ProductName == currentItem.ProductName)
+                    .Select(baselineItem => new GetStocksGenerationDto
+                    {
+                        ProductName = currentItem.ProductName,
+                        GeneratedQuantity = currentItem.GeneratedQuantity,
+                        BaselineQuantity = baselineItem.GeneratedQuantity,
+                        DifferentialPercentage = baselineItem.GeneratedQuantity != 0
+                            ? (currentItem.GeneratedQuantity - baselineItem.GeneratedQuantity) /
+                              baselineItem.GeneratedQuantity * 100m
+                            : 100m // If baseline GeneratedQuantity is 0, consider 100% difference
+                    })
+                    .DefaultIfEmpty(new GetStocksGenerationDto
+                    {
+                        ProductName = currentItem.ProductName,
+                        GeneratedQuantity = currentItem.GeneratedQuantity,
+                        DifferentialPercentage = 100m // If no baseline match, consider 100% difference
+                    })
+                ).ToList();
+
+            return ApiResponse<List<GetStocksGenerationDto>>.Success(differentialStockData);
+
+        }
         //public async Task<string> ReceiveStocks()
         //{
         //    var data = _unitOfWork.StocksReceiving.GetQueryable()

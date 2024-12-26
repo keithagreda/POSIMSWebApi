@@ -97,6 +97,9 @@ namespace POSIMSWebApi.Application.Services
             return result;
         }
 
+        
+
+
         /// <summary>
         /// To handle how stock is deducted from stock details when a sale has happened
         /// </summary>
@@ -137,5 +140,6 @@ namespace POSIMSWebApi.Application.Services
             //_unitOfWork.Complete();
             return new Result<string>("Success!");
         }
+
     }
 }

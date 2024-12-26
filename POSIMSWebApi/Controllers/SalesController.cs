@@ -30,8 +30,8 @@ namespace POSIMSWebApi.Controllers
             var data = await _unitOfWork.SalesHeader.GetQueryable().Include(e => e.SalesDetails)
                 .ThenInclude(e => e.ProductFk)
                 .Include(e => e.CustomerFk)
-                .ToPaginatedResult(input.PageNumber, input.PageSize)
                 .OrderByDescending(e => e.CreationTime)
+                .ToPaginatedResult(input.PageNumber, input.PageSize)
                 .Select(e => new SalesHeaderDto
                 {
                     Id = e.Id,

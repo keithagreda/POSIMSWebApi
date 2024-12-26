@@ -3,6 +3,7 @@ using Domain.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using POSIMSWebApi.Application.Dtos.Stocks;
 using POSIMSWebApi.Application.Dtos.StocksReceiving;
 using POSIMSWebApi.Application.Interfaces;
 
@@ -59,6 +60,12 @@ namespace POSIMSWebApi.Controllers
                 }).ToListAsync();
 
             return Ok(ApiResponse<List<GetAllStocksReceivingDto>>.Success(result));
+        }
+        [HttpGet("GetStocksGeneration")]
+        public async Task<ActionResult<ApiResponse<List<GetStocksGenerationDto>>>> GetStocksGeneration([FromQuery]GetStocksGenerationInput input)
+        {
+            var res = await _stockReceivingService.GetStocksGeneration(input);
+            return Ok(res);
         }
     }
 }
