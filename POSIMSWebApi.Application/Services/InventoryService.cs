@@ -79,6 +79,7 @@ namespace POSIMSWebApi.Application.Services
                            ProductName = currInv.ProductName,
                            ReceivedQty = recv != null ? recv.TotalQuantity : 0,
                            SalesQty = sales != null ? sales.TotalQuantity : 0,
+                           BegQty = currInv.TotalQuantity,
                            CurrentStocks = (currInv != null ? currInv.TotalQuantity : 0) + (recv != null ? recv.TotalQuantity : 0) - (sales != null ? sales.TotalQuantity : 0)
                        }).ToList();
 

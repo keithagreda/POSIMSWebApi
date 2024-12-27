@@ -91,14 +91,15 @@ namespace DataAccess.EFCore.Repositories
                 //join 3 tables
                 var join = (from i in inventoryDetails
                             join r in received
-                            on i.ProductId equals r.ProductId
+                            on i.ProductId equals r.ProductId into jir
+                            from ir in jir.DefaultIfEmpty() // Left join with received
                             join s in salesDetails
-                            on i.ProductId equals s.ProductId
+                            on i.ProductId equals s.ProductId into jirs
+                            from irs in jirs.DefaultIfEmpty() // Left join with salesDetails
                             select new InventoryBeginningDetails
                             {
-
-                                ProductId = i.ProductId,
-                                Qty = (i.Quantity + r.TotalQuantity) - s.TotalQuantity,
+                                ProductId = i.ProductId, // Use i.ProductId directly as it always exists
+                                Qty = (i.Quantity + (ir?.TotalQuantity ?? 0)) - (irs?.TotalQuantity ?? 0),
                                 InventoryBeginningId = newInventory.Id,
                                 CreationTime = DateTime.UtcNow,
                             }).ToList();
