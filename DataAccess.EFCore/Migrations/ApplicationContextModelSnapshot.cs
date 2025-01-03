@@ -69,7 +69,7 @@ namespace DataAccess.EFCore.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Customers");
+                    b.ToTable("Customers", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.InventoryBeginning", b =>
@@ -110,7 +110,7 @@ namespace DataAccess.EFCore.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("InventoryBeginnings");
+                    b.ToTable("InventoryBeginnings", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.InventoryBeginningDetails", b =>
@@ -158,7 +158,7 @@ namespace DataAccess.EFCore.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("InventoryBeginningDetails");
+                    b.ToTable("InventoryBeginningDetails", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Product", b =>
@@ -209,7 +209,7 @@ namespace DataAccess.EFCore.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.ProductCategory", b =>
@@ -250,7 +250,7 @@ namespace DataAccess.EFCore.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("ProductCategories");
+                    b.ToTable("ProductCategories", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.Remarks", b =>
@@ -293,7 +293,7 @@ namespace DataAccess.EFCore.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Remarks");
+                    b.ToTable("Remarks", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.SalesDetail", b =>
@@ -353,7 +353,7 @@ namespace DataAccess.EFCore.Migrations
 
                     b.HasIndex("SalesHeaderId");
 
-                    b.ToTable("SalesDetails");
+                    b.ToTable("SalesDetails", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.SalesHeader", b =>
@@ -410,7 +410,7 @@ namespace DataAccess.EFCore.Migrations
 
                     b.HasIndex("RemarksId");
 
-                    b.ToTable("SalesHeaders");
+                    b.ToTable("SalesHeaders", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.SalesReturn", b =>
@@ -455,7 +455,7 @@ namespace DataAccess.EFCore.Migrations
 
                     b.HasIndex("StockDetailId");
 
-                    b.ToTable("SalesReturns");
+                    b.ToTable("SalesReturns", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.StockDamageDetail", b =>
@@ -500,7 +500,7 @@ namespace DataAccess.EFCore.Migrations
 
                     b.HasIndex("StockDetailId");
 
-                    b.ToTable("StockDamageDetails");
+                    b.ToTable("StockDamageDetails", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.StockDamageHeader", b =>
@@ -542,7 +542,7 @@ namespace DataAccess.EFCore.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("StockDamageHeaders");
+                    b.ToTable("StockDamageHeaders", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.StocksDetail", b =>
@@ -594,7 +594,7 @@ namespace DataAccess.EFCore.Migrations
 
                     b.HasIndex("StocksHeaderId");
 
-                    b.ToTable("StocksDetails");
+                    b.ToTable("StocksDetails", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.StocksHeader", b =>
@@ -644,7 +644,7 @@ namespace DataAccess.EFCore.Migrations
 
                     b.HasIndex("StorageLocationId");
 
-                    b.ToTable("StocksHeaders");
+                    b.ToTable("StocksHeaders", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.StocksReceiving", b =>
@@ -696,7 +696,7 @@ namespace DataAccess.EFCore.Migrations
 
                     b.HasIndex("StocksHeaderId");
 
-                    b.ToTable("StocksReceivings");
+                    b.ToTable("StocksReceivings", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.StorageLocation", b =>
@@ -741,7 +741,7 @@ namespace DataAccess.EFCore.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("StorageLocation");
+                    b.ToTable("StorageLocation", (string)null);
                 });
 
             modelBuilder.Entity("ProductProductCategory", b =>
@@ -756,7 +756,7 @@ namespace DataAccess.EFCore.Migrations
 
                     b.HasIndex("ProductsId");
 
-                    b.ToTable("ProductProductCategory");
+                    b.ToTable("ProductProductCategory", (string)null);
                 });
 
             modelBuilder.Entity("Domain.Entities.InventoryBeginningDetails", b =>

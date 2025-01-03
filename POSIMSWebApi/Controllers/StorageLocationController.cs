@@ -2,11 +2,13 @@
 using Domain.Error;
 using Domain.Interfaces;
 using LanguageExt;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using POSIMSWebApi.Application.Dtos.StorageLocation;
 using POSIMSWebApi.Application.Interfaces;
+using POSIMSWebApi.Authentication;
 
 namespace POSIMSWebApi.Controllers
 {
@@ -21,7 +23,7 @@ namespace POSIMSWebApi.Controllers
             _storageLocationService = storageLocationService;
             _unitOfWork = unitOfWork;
         }
-
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory + "," + UserRole.Cashier)]
         [HttpPost("CreateStorageLocation")]
         public async Task<IActionResult> CreateStorageLocation([FromBody]CreateOrEditStorageLocationDto input)
         {
@@ -32,6 +34,7 @@ namespace POSIMSWebApi.Controllers
                 success => CreatedAtAction(nameof(CreateStorageLocation), new { id = input.Id }, success),
                 error => BadRequest(error));
         }
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory + "," + UserRole.Cashier)]
         [HttpGet("GetAllStorageLocation")]
         public async Task<ActionResult<ApiResponse<List<GetStorageLocationForDropDownDto>>>> GetAllStorageLocation()
         {

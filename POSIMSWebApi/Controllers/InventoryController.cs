@@ -1,9 +1,11 @@
 ﻿using Domain.ApiResponse;
 using Domain.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using POSIMSWebApi.Application.Dtos.Inventory;
 using POSIMSWebApi.Application.Interfaces;
+using POSIMSWebApi.Authentication;
 
 namespace POSIMSWebApi.Controllers
 {
@@ -18,6 +20,8 @@ namespace POSIMSWebApi.Controllers
             _inventoryService = inventoryService;
             _unitOfWork = unitOfWork;
         }
+
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory)]
         [HttpGet("GetCurrentStocks")]
         public async Task<ActionResult<ApiResponse<List<CurrentInventoryDto>>>> GetCurrentStocks()
         {
@@ -32,7 +36,9 @@ namespace POSIMSWebApi.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
         [HttpPost("BeginningEntry")]
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory)]
         public async Task<IActionResult> BeginningEntry(CreateBeginningEntryDto input)
         {
             var data = await _inventoryService.BeginningEntry(input);
@@ -41,6 +47,8 @@ namespace POSIMSWebApi.Controllers
                 return BadRequest(ModelState);
             return Ok(data);
         }
+
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory)]
         [HttpPost("CloseInventory")]
         public async Task<ActionResult<ApiResponse<string>>> CloseInventory()
         {

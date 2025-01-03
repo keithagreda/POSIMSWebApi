@@ -10,6 +10,8 @@ using Domain.Entities;
 using Domain.Interfaces;
 using Domain.ApiResponse;
 using POSIMSWebApi.Application.Dtos.ProductCategory;
+using Microsoft.AspNetCore.Authorization;
+using POSIMSWebApi.Authentication;
 
 namespace POSIMSWebApi.Controllers
 {
@@ -25,6 +27,8 @@ namespace POSIMSWebApi.Controllers
             _context = context;
             _unitOfWork = unitOfWork;
         }
+
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory)]
         [HttpGet("GetProductCategory")]
         public async Task<ActionResult<ApiResponse<IList<ProductCategoryDto>>>> GetProductCategory()
         {
@@ -48,7 +52,9 @@ namespace POSIMSWebApi.Controllers
             }
             return Ok(ApiResponse<IList<ProductCategoryDto>>.Success(productCategoriesDto));
         }
-        [HttpPost]
+
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory)]
+        [HttpPost("AddProductCategory")]
         public ActionResult AddProductCategory()
         {
             try

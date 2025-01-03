@@ -3,6 +3,7 @@ using Domain.Entities;
 using Domain.Interfaces;
 using LanguageExt;
 using LanguageExt.Common;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +13,7 @@ using POSIMSWebApi.Application.Dtos.ProductCategory;
 using POSIMSWebApi.Application.Dtos.ProductDtos;
 using POSIMSWebApi.Application.Dtos.Sales;
 using POSIMSWebApi.Application.Interfaces;
+using POSIMSWebApi.Authentication;
 using POSIMSWebApi.QueryExtensions;
 using System.Linq;
 
@@ -29,6 +31,7 @@ namespace POSIMSWebApi.Controllers
             _productService = productService;
         }
 
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory + "," + UserRole.Cashier)]
         [HttpPost("CreateProduct")]
         public async Task<ActionResult<ApiResponse<string>>> CreateProduct(CreateProductDto input)
         {
@@ -45,6 +48,8 @@ namespace POSIMSWebApi.Controllers
                 throw new Exception(ex.Message);
             }
         }
+
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory + "," + UserRole.Cashier)]
         [HttpGet("GetProducts")]
         public async Task<ActionResult<ApiResponse<IList<ProductV1Dto>>>> GetProducts()
         {
@@ -68,6 +73,7 @@ namespace POSIMSWebApi.Controllers
             return Ok(ApiResponse<IList<ProductV1Dto>>.Success(data));
         }
 
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory + "," + UserRole.Cashier)]
         [HttpGet("GetAllProductsWithCateg")]
         public async Task<ActionResult<ApiResponse<IList<ProductWithCategDto>>>> GetAllProductsWithCateg()
         {
@@ -87,6 +93,7 @@ namespace POSIMSWebApi.Controllers
             }
         }
 
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory + "," + UserRole.Cashier)]
         [HttpGet("GetProductWithCateg/{id}")]
         public async Task<IActionResult> GetProductWithCateg(int id)
         {
@@ -101,6 +108,8 @@ namespace POSIMSWebApi.Controllers
             if (!ModelState.IsValid) return BadRequest(ModelState);
             return Ok(result);
         }
+
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory + "," + UserRole.Cashier)]
         [HttpGet("GetProductForEdit/{id}")]
         public async Task<ActionResult<ApiResponse<CreateProductDto>>> GetProductForEdit(int id)
         {
@@ -129,6 +138,8 @@ namespace POSIMSWebApi.Controllers
 
             return Ok(ApiResponse<CreateProductDto>.Success(data));
         }
+
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory + "," + UserRole.Cashier)]
         [HttpGet("GetProductsForDropDown")]
         public async Task<ActionResult<ApiResponse<PaginatedResult<GetProductDropDownTableDto>>>> GetProductDropDownTable([FromQuery]GenericSearchParams? input)
         {
@@ -151,7 +162,7 @@ namespace POSIMSWebApi.Controllers
 
             return Ok(ApiResponse<PaginatedResult<GetProductDropDownTableDto>>.Success(result));
         }
-
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory + "," + UserRole.Cashier)]
         [HttpPost("GetProductDetailsForCart")]
         public async Task<ActionResult<ApiResponse<List<CreateSalesDetailV1Dto>>>> GetProductDetailsForCart(List<CreateSalesDetailV1Dto> input)
         {

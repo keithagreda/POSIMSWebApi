@@ -1,5 +1,6 @@
 ﻿using Domain.ApiResponse;
 using Domain.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ using POSIMSWebApi.Application.Dtos.ProductDtos;
 using POSIMSWebApi.Application.Dtos.Sales;
 using POSIMSWebApi.Application.Interfaces;
 using POSIMSWebApi.Application.Services;
+using POSIMSWebApi.Authentication;
 using POSIMSWebApi.QueryExtensions;
 
 namespace POSIMSWebApi.Controllers
@@ -23,6 +25,7 @@ namespace POSIMSWebApi.Controllers
             _salesService = salesService;
             _unitOfWork = unitOfWork;
         }
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Cashier)]
         [HttpGet("GetSales")]
         public async Task<ActionResult<ApiResponse<PaginatedResult<SalesHeaderDto>>>> GetSales([FromQuery]FilterSales input)
         {
@@ -56,7 +59,7 @@ namespace POSIMSWebApi.Controllers
             return ApiResponse<PaginatedResult<SalesHeaderDto>>.Success(result);
                 
         }
-
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Cashier)]
         [HttpPost("CreateSalesFromTransNum")]
         public async Task<ActionResult<ApiResponse<string>>> CreateSalesFromTransNum(CreateOrEditSalesDto input)
         {
@@ -76,7 +79,7 @@ namespace POSIMSWebApi.Controllers
             }
             
         }
-
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Cashier)]
         [HttpPost("CreateSales")]
         public async Task<ActionResult<ApiResponse<string>>> CreateSales(CreateOrEditSalesV1Dto input)
         {
@@ -86,14 +89,14 @@ namespace POSIMSWebApi.Controllers
             _unitOfWork.Complete();
             return result;
         }
-
+        [Authorize(Roles = UserRole.Admin)]
         [HttpGet("GetTotalSales")]
         public async Task<ActionResult<ApiResponse<GetTotalSalesDto>>> GetTotalSales()
         {
             var result = await _salesService.GetTotalSales();
             return Ok(result);
         }
-
+        [Authorize(Roles = UserRole.Admin)]
         [HttpGet("GetTotalMonthlySales")]
         public async Task<ActionResult<ApiResponse<List<PerMonthSalesDto>>>> GetPerMonthSales(int? year)
         {

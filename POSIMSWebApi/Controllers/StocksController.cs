@@ -1,11 +1,13 @@
 ﻿using Domain.ApiResponse;
 using Domain.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using POSIMSWebApi.Application.Dtos.Stocks;
 using POSIMSWebApi.Application.Dtos.StocksReceiving;
 using POSIMSWebApi.Application.Interfaces;
+using POSIMSWebApi.Authentication;
 
 namespace POSIMSWebApi.Controllers
 {
@@ -20,9 +22,8 @@ namespace POSIMSWebApi.Controllers
             _unitOfWork = unitOfWork;
             _stockReceivingService = stockReceivingService;
         }
-
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory)]
         [HttpPost("ReceiveStocks")]
-
         public async Task<ActionResult<ApiResponse<string>>> ReceiveStocks(CreateStocksReceivingDto input)
         {
             if (!ModelState.IsValid)
@@ -36,6 +37,7 @@ namespace POSIMSWebApi.Controllers
            //success => CreatedAtAction(nameof(ReceiveStocks), new { id = input.ProductId, input.Quantity, input.StorageLocationId }, success),
            //error => BadRequest(error));
         }
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory)]
         [HttpGet("GetReceivingStocks")]
         public async Task<ActionResult<ApiResponse<List<GetAllStocksReceivingDto>>>> GetReceiveStocks()
         {
@@ -61,6 +63,7 @@ namespace POSIMSWebApi.Controllers
 
             return Ok(ApiResponse<List<GetAllStocksReceivingDto>>.Success(result));
         }
+        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory)]
         [HttpGet("GetStocksGeneration")]
         public async Task<ActionResult<ApiResponse<List<GetStocksGenerationDto>>>> GetStocksGeneration([FromQuery]GetStocksGenerationInput input)
         {
