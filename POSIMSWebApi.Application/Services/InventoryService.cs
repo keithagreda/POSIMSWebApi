@@ -96,7 +96,8 @@ namespace POSIMSWebApi.Application.Services
             var getCurrentOpenedInventory = _unitOfWork.InventoryBeginning.GetQueryable().Where(e => e.Status == Domain.Enums.InventoryStatus.Open);
             var gcoId = await getCurrentOpenedInventory.Select(e => e.Id).FirstOrDefaultAsync();
 
-            var product = await _unitOfWork.Product.GetQueryable().Where(e => e.Name == input.ProductName).Select(e => e.Id).FirstOrDefaultAsync();
+            var product = await _unitOfWork.Product.GetQueryable()
+                .Where(e => e.Id == input.ProductId).Select(e => e.Id).FirstOrDefaultAsync();
 
             if(product == 0)
             {

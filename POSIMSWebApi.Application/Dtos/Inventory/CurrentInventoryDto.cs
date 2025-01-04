@@ -17,7 +17,8 @@ namespace POSIMSWebApi.Application.Dtos.Inventory
 
     public class CreateBeginningEntryDto
     {
-        public string ProductName { get; set;}
+        public int ProductId { get; set; }
+        //public string ProductName { get; set;}
         public decimal ReceivedQty { get; set;}
     }
 }

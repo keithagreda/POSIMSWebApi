@@ -4,6 +4,7 @@ using Domain.Error;
 using Domain.Interfaces;
 using LanguageExt.Common;
 using Microsoft.EntityFrameworkCore;
+using POSIMSWebApi.Application.Dtos.Inventory;
 using POSIMSWebApi.Application.Dtos.Stocks;
 using POSIMSWebApi.Application.Dtos.StocksReceiving;
 using POSIMSWebApi.Application.Interfaces;
@@ -20,15 +21,34 @@ namespace POSIMSWebApi.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IStockDetailService _stockDetailService;
+        private readonly IInventoryService _inventoryService;
         public StocksReceivingService(IUnitOfWork unitOfWork,
-            IStockDetailService stockDetailService)
+            IStockDetailService stockDetailService,
+            IInventoryService inventoryService)
         {
             _unitOfWork = unitOfWork;
             _stockDetailService = stockDetailService;
+            _inventoryService = inventoryService;
         }
 
         public async Task<ApiResponse<string>> ReceiveStocks(CreateStocksReceivingDto input)
         {
+            var currentlyOpenedInv = await _unitOfWork.InventoryBeginning.CreateOrGetInventoryBeginning();
+            //check if inventory has beginning stocks
+            var getCurrentOpenedInventory = _unitOfWork.InventoryBeginningDetails.GetQueryable().Include(e => e.InventoryBeginningFk)
+                .Where(e => e.InventoryBeginningFk.Status == Domain.Enums.InventoryStatus.Open && e.ProductId == input.ProductId);
+
+            if(!await getCurrentOpenedInventory.AnyAsync())
+            {
+                //dapat naay storage location
+                CreateBeginningEntryDto createBeginningEntryDto = new CreateBeginningEntryDto
+                {
+                    ProductId = input.ProductId,
+                    ReceivedQty = input.Quantity,
+                };
+                var result = await _inventoryService.BeginningEntry(createBeginningEntryDto);
+                return ApiResponse<string>.Success(result);
+            }
             //have to create stocks first
             var createStocks = new CreateStocks
             {
@@ -39,6 +59,7 @@ namespace POSIMSWebApi.Application.Services
             //generate transnum based on product id and current products received this day
             var transNum = TransNumGenerator(input.ProductId, input.StorageLocationId);
             //get stocks header id for receiving
+
             var stocksHeaderIdResult = await _stockDetailService.AutoCreateStocks(createStocks, transNum);
 
             if (!stocksHeaderIdResult.IsSuccess)
@@ -46,7 +67,6 @@ namespace POSIMSWebApi.Application.Services
                 return ApiResponse<string>.Fail("Something went wrong while creating stocks");
             }
 
-            var currentlyOpenedInv = await _unitOfWork.InventoryBeginning.CreateOrGetInventoryBeginning();
 
             // Step 5: Prepare the StocksReceiving entity
             var stocksReceiving = new StocksReceiving
@@ -111,6 +131,7 @@ namespace POSIMSWebApi.Application.Services
             //        GeneratedQuantity = e.Sum(e => e.Quantity),
             //        DifferentialPercentage
             //    });
+
 
             var receiving = _unitOfWork.StocksReceiving.GetQueryable()
             .Include(e => e.StocksHeaderFk.ProductFK);

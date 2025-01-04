@@ -38,7 +38,8 @@ namespace POSIMSWebApi.Controllers
         }
 
         [HttpPost("BeginningEntry")]
-        [Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory)]
+        [AllowAnonymous]
+        //[Authorize(Roles = UserRole.Admin + "," + UserRole.Inventory)]
         public async Task<IActionResult> BeginningEntry(CreateBeginningEntryDto input)
         {
             var data = await _inventoryService.BeginningEntry(input);
